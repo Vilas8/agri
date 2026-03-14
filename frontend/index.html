@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en" class="h-full">
 <head>
@@ -17,6 +16,31 @@
     body { margin: 0; }
     #loading-screen { display: flex; }
     #loading-screen.hidden { display: none !important; }
+
+    /* ── Password Strength Bar ── */
+    #pw-strength-bar-wrap { height: 6px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+    #pw-strength-bar { height: 100%; width: 0%; border-radius: 999px; transition: width .3s, background .3s; }
+    #pw-strength-label { font-size: 0.72rem; margin-top: 4px; font-weight: 600; }
+    #pw-requirements { font-size: 0.72rem; color: #6b7280; margin-top: 6px; line-height: 1.6; }
+    #pw-requirements span { display: inline-block; margin-right: 8px; }
+    #pw-requirements span.met { color: #10b981; }
+    #pw-requirements span.unmet { color: #9ca3af; }
+
+    /* ── Auto-Scroll Notification Panel ── */
+    @keyframes scrollUp {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(-50%); }
+    }
+    .notification-scroll-track {
+      overflow: hidden;
+      max-height: 220px;
+    }
+    .notification-scroll-inner {
+      animation: scrollUp 18s linear infinite;
+    }
+    .notification-scroll-inner:hover {
+      animation-play-state: paused;
+    }
   </style>
   
   <!-- Load fonts with display=swap for faster rendering -->
@@ -40,20 +64,16 @@
   
   <!-- Show loading screen BEFORE any scripts load -->
   <script>
-    // Immediately show loading screen before anything else
     document.addEventListener('DOMContentLoaded', function() {
       var loadingScreen = document.getElementById('loading-screen');
-      if (loadingScreen) {
-        loadingScreen.style.display = 'flex';
-      }
+      if (loadingScreen) loadingScreen.style.display = 'flex';
     });
-    // Also try to show it immediately in head
     (function() {
       var loading = document.getElementById('loading-screen');
       if (loading) loading.style.display = 'flex';
     })();
   </script>
- </head>
+</head>
 <body class="h-full">
   <div id="app" class="h-full overflow-auto">
    <!-- Loading Screen -->
@@ -63,23 +83,27 @@
      <p class="text-white text-xl font-semibold">Loading AgriPredict...</p>
     </div>
    </div>
+
    <!-- Home Page -->
-     <div id="home-page" class="hidden h-full">
+   <div id="home-page" class="hidden h-full">
     <div class="h-full relative overflow-hidden" style="background: linear-gradient(135deg, rgba(6, 78, 59, 0.3) 0%, rgba(4, 120, 87, 0.3) 50%, rgba(16, 185, 129, 0.3) 100%), url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; background-attachment: fixed;">
+
      <!-- Inline Notifications Display - Always Visible in Body -->
-<div class="absolute top-48 right-6 z-20">
-<div class="glass rounded-2xl p-4 backdrop-blur-md max-w-xs">
+     <div class="absolute top-48 right-6 z-20">
+      <div class="glass rounded-2xl p-4 backdrop-blur-md max-w-xs">
        <div class="flex items-center justify-between mb-3">
         <h3 class="text-white font-bold text-lg">📢 Price Alerts</h3>
         <span id="notification-date" class="text-emerald-200 text-xs"></span>
        </div>
-       <div id="notification-list-body" class="space-y-2 max-h-64 overflow-y-auto">
-        <marquee id="home-notification-marquee" direction="up" scrollamount="3" height="200px" class="bg-transparent">
-         <!-- Notifications will be populated by JavaScript -->
-        </marquee>
+       <!-- Auto-scrolling notifications container -->
+       <div class="notification-scroll-track rounded-xl">
+        <div id="home-notification-scroll" class="notification-scroll-inner space-y-2">
+         <!-- Populated by JavaScript -->
+        </div>
        </div>
+      </div>
      </div>
-     </div>
+
      <div class="relative z-10 h-full flex flex-col">
       <header class="flex justify-between items-center p-6">
        <div class="flex items-center gap-3">
@@ -121,11 +145,12 @@
       </main>
      </div>
     </div>
-    <!-- Footer - Visually Distinct from Body -->
+    <!-- Footer -->
     <footer class="bg-gray-900 bg-opacity-95 py-6 px-6 text-center border-t border-emerald-700">
      <p class="text-white font-medium">© 2026 AgriPredict.</p>
     </footer>
    </div>
+
 <!-- About Us Page -->
 <div id="about-us-page" class="hidden h-full" style="background: linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(4, 120, 87, 0.9) 50%, rgba(16, 185, 129, 0.9) 100%), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; background-attachment: fixed;">
     <div class="h-full overflow-auto">
@@ -144,7 +169,6 @@
         <h2 class="text-4xl md:text-5xl font-bold text-white mb-4 font-display">About <span class="text-emerald-300">Us</span></h2>
         <p class="text-xl text-emerald-100">Empowering Farmers with AI-Driven Price Predictions</p>
        </div>
-       
        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="bg-white rounded-2xl p-6 shadow-xl">
          <div class="flex items-center gap-4 mb-4">
@@ -153,7 +177,6 @@
          </div>
          <p class="text-gray-600">To empower farmers with accurate, AI-driven commodity price predictions that help them make informed decisions and maximize their profits.</p>
         </div>
-        
         <div class="bg-white rounded-2xl p-6 shadow-xl">
          <div class="flex items-center gap-4 mb-4">
           <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-3xl">🤖</span></div>
@@ -161,7 +184,6 @@
          </div>
          <p class="text-gray-600">Our advanced Random Forest Regression model delivers 94.2% accuracy in predicting future commodity prices.</p>
         </div>
-        
         <div class="bg-white rounded-2xl p-6 shadow-xl">
          <div class="flex items-center gap-4 mb-4">
           <div class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center"><span class="text-3xl">🌾</span></div>
@@ -169,7 +191,6 @@
          </div>
          <p class="text-gray-600">We provide price predictions for Maize, Paddy, Wheat, and Sugarcane across multiple markets in Karnataka.</p>
         </div>
-        
         <div class="bg-white rounded-2xl p-6 shadow-xl">
          <div class="flex items-center gap-4 mb-4">
           <div class="w-14 h-14 bg-yellow-100 rounded-xl flex items-center justify-center"><span class="text-3xl">📊</span></div>
@@ -178,7 +199,6 @@
          <p class="text-gray-600">Access real-time market prices and historical data from multiple districts including Kolar, Chikkabalpura, and Bangalore Rural.</p>
         </div>
        </div>
-       
        <div class="bg-white rounded-2xl p-8 shadow-xl mb-8">
        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Key Features</h3>
        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -199,46 +219,25 @@
         </div>
        </div>
        </div>
-       
-       <!-- Ready to get started section moved below Contact Us -->
-       
-       <!-- Contact Us Section -->
        <div class="mt-12 bg-white rounded-2xl p-8 shadow-xl">
         <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Contact <span class="text-emerald-600">Us</span></h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-         <!-- Contact Information -->
          <div>
           <div class="space-y-4">
            <div class="flex items-center gap-4 p-4 bg-emerald-50 rounded-xl">
-            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-             <span class="text-2xl">📧</span>
-            </div>
-            <div>
-             <p class="text-sm text-gray-500">Email</p>
-             <p class="font-semibold text-gray-800">support@agripredict.com</p>
-            </div>
+            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center"><span class="text-2xl">📧</span></div>
+            <div><p class="text-sm text-gray-500">Email</p><p class="font-semibold text-gray-800">support@agripredict.com</p></div>
            </div>
            <div class="flex items-center gap-4 p-4 bg-blue-50 rounded-xl">
-            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-             <span class="text-2xl">📱</span>
-            </div>
-            <div>
-             <p class="text-sm text-gray-500">Phone</p>
-             <p class="font-semibold text-gray-800">+91 9876543210</p>
-            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-2xl">📱</span></div>
+            <div><p class="text-sm text-gray-500">Phone</p><p class="font-semibold text-gray-800">+91 9876543210</p></div>
            </div>
            <div class="flex items-center gap-4 p-4 bg-purple-50 rounded-xl">
-            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-             <span class="text-2xl">📍</span>
-            </div>
-            <div>
-             <p class="text-sm text-gray-500">Address</p>
-             <p class="font-semibold text-gray-800">Karnataka, India</p>
-            </div>
+            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center"><span class="text-2xl">📍</span></div>
+            <div><p class="text-sm text-gray-500">Address</p><p class="font-semibold text-gray-800">Karnataka, India</p></div>
            </div>
           </div>
          </div>
-         <!-- Contact Form -->
          <div>
           <form id="contact-form" onsubmit="handleContactSubmit(event)" class="space-y-4">
            <div>
@@ -258,8 +257,6 @@
          </div>
         </div>
        </div>
-       
-       <!-- Ready to Get Started - Below Contact Us -->
        <div class="mt-12 text-center">
         <p class="text-white text-lg mb-4">Ready to get started?</p>
         <div class="flex justify-center gap-4">
@@ -271,9 +268,9 @@
      </main>
     </div>
    </div>
+
 <!-- Login Page -->
 <div id="login-page" class="hidden h-full" style="background: linear-gradient(135deg, rgba(6, 78, 59, 0.7) 0%, rgba(4, 120, 87, 0.7) 50%, rgba(20, 184, 166, 0.7) 100%), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; background-attachment: fixed;">
-    <!-- Separate Back Button -->
     <button onclick="goBack()" class="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg font-medium transition-all backdrop-blur-sm">
      <span>←</span><span>Back</span>
     </button>
@@ -292,7 +289,7 @@
          <label class="block text-gray-700 font-medium mb-2">Email Address</label>
          <input type="email" id="login-email" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 transition-all" placeholder="Enter your email">
         </div>
-<div class="mb-5 relative">
+        <div class="mb-5 relative">
          <label class="block text-gray-700 font-medium mb-2">Password</label>
          <input type="password" id="login-password" required class="w-full px-4 py-3 pr-12 rounded-xl border-2 border-gray-200 focus:border-teal-500 transition-all" placeholder="Enter your password">
          <button type="button" onclick="togglePasswordVisibility('login-password', 'login-eye')" class="absolute right-4 top-[38px] text-gray-400 hover:text-gray-600 transition-colors">
@@ -301,7 +298,7 @@
         </div>
         <div class="flex justify-between items-center mb-6">
          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="w-4 h-4 text-teal-600 rounded"><span class="text-gray-600 text-sm">Remember me</span></label>
-<button type="button" onclick="showForgotPasswordModal()" class="text-teal-600 text-sm hover:underline">Forgot Password?</button>
+         <button type="button" onclick="showForgotPasswordModal()" class="text-teal-600 text-sm hover:underline">Forgot Password?</button>
         </div>
         <button type="submit" id="login-btn" class="w-full py-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all transform hover:scale-[1.02]">Sign In</button>
        </form>
@@ -313,9 +310,9 @@
      </div>
     </div>
    </div>
+
 <!-- Register Page -->
 <div id="register-page" class="hidden h-full" style="background: linear-gradient(135deg, rgba(6, 78, 59, 0.75) 0%, rgba(4, 120, 87, 0.75) 50%, rgba(20, 184, 166, 0.75) 100%), url('https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; background-attachment: fixed;">
-    <!-- Separate Back Button -->
     <button onclick="goBack()" class="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg font-medium transition-all backdrop-blur-sm">
      <span>←</span><span>Back</span>
     </button>
@@ -331,30 +328,55 @@
        <form id="register-form" onsubmit="handleRegister(event)">
         <div class="mb-4">
          <label class="block text-gray-700 font-medium mb-2">Full Name</label>
-<input type="text" id="reg-name" required autocomplete="off" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 transition-all" placeholder="Enter your name">
+         <input type="text" id="reg-name" required autocomplete="off" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 transition-all" placeholder="Enter your name">
         </div>
+
+        <!-- Email with live validation -->
         <div class="mb-4">
          <label class="block text-gray-700 font-medium mb-2">Email Address</label>
-         <input type="email" id="reg-email" required autocomplete="off" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 transition-all" placeholder="Enter your email">
+         <input type="email" id="reg-email" required autocomplete="off"
+           oninput="validateRegEmail()"
+           class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 transition-all"
+           placeholder="e.g. yourname@gmail.com">
+         <p id="reg-email-hint" class="text-xs mt-1 hidden"></p>
         </div>
+
         <div class="mb-4">
          <label class="block text-gray-700 font-medium mb-2">Mobile Number</label>
-<input type="tel" id="reg-phone" required pattern="[0-9]{10}" autocomplete="off" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 transition-all" placeholder="10-digit mobile number">
+         <input type="tel" id="reg-phone" required pattern="[0-9]{10}" autocomplete="off" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 transition-all" placeholder="10-digit mobile number">
         </div>
-<div class="mb-4 relative">
+
+        <!-- Password with strength bar -->
+        <div class="mb-4 relative">
          <label class="block text-gray-700 font-medium mb-2">Password</label>
-         <input type="password" id="reg-password" required minlength="6" autocomplete="off" class="w-full px-4 py-3 pr-12 rounded-xl border-2 border-gray-200 focus:border-emerald-500 transition-all" placeholder="Min 6 characters">
+         <input type="password" id="reg-password" required autocomplete="off"
+           oninput="updatePasswordStrength(this.value)"
+           class="w-full px-4 py-3 pr-12 rounded-xl border-2 border-gray-200 focus:border-emerald-500 transition-all"
+           placeholder="Min 8 characters">
          <button type="button" onclick="togglePasswordVisibility('reg-password', 'reg-eye')" class="absolute right-4 top-[38px] text-gray-400 hover:text-gray-600 transition-colors">
           <span id="reg-eye" class="text-lg">👁️</span>
          </button>
+         <!-- Strength Bar -->
+         <div id="pw-strength-bar-wrap"><div id="pw-strength-bar"></div></div>
+         <p id="pw-strength-label" class="text-xs mt-1"></p>
+         <!-- Requirements hint -->
+         <div id="pw-requirements">
+          <span id="req-len" class="unmet">✗ 8+ chars</span>
+          <span id="req-upper" class="unmet">✗ Uppercase</span>
+          <span id="req-lower" class="unmet">✗ Lowercase</span>
+          <span id="req-digit" class="unmet">✗ Number</span>
+          <span id="req-sym" class="unmet">✗ Symbol (!@#$...)</span>
+         </div>
         </div>
-<div class="mb-6 relative">
+
+        <div class="mb-6 relative">
          <label class="block text-gray-700 font-medium mb-2">Confirm Password</label>
          <input type="password" id="reg-confirm" required autocomplete="off" class="w-full px-4 py-3 pr-12 rounded-xl border-2 border-gray-200 focus:border-emerald-500 transition-all" placeholder="Confirm password">
          <button type="button" onclick="togglePasswordVisibility('reg-confirm', 'reg-confirm-eye')" class="absolute right-4 top-[38px] text-gray-400 hover:text-gray-600 transition-colors">
           <span id="reg-confirm-eye" class="text-lg">👁️</span>
          </button>
         </div>
+
         <div id="reg-error" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-xl text-sm"></div>
         <button type="submit" id="register-btn" class="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all transform hover:scale-[1.02]">Create Account</button>
        </form>
@@ -363,9 +385,9 @@
      </div>
     </div>
    </div>
+
 <!-- Admin Login Page -->
 <div id="admin-login-page" class="hidden h-full" style="background: linear-gradient(135deg, rgba(6, 78, 59, 0.85) 0%, rgba(4, 120, 87, 0.85) 50%, rgba(20, 184, 166, 0.85) 100%), url('https://images.unsplash.com/photo-1488459716781-31db52582fe9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; background-attachment: fixed;">
-    <!-- Separate Back Button -->
     <button onclick="goBack()" class="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg font-medium transition-all backdrop-blur-sm">
      <span>←</span><span>Back</span>
     </button>
@@ -384,9 +406,9 @@
          <label class="block text-gray-700 font-medium mb-2">Admin Email</label>
          <input type="email" id="admin-email" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-600 transition-all" placeholder="admin email" pattern="[a-zA-Z0-9._%+-]+@gmail\.com" title="Please enter a valid @gmail.com email address">
         </div>
-<div class="mb-5 relative">
+        <div class="mb-5 relative">
          <label class="block text-gray-700 font-medium mb-2">Password</label>
-        <input type="password" id="admin-password" required class="w-full px-4 py-3 pr-12 rounded-xl border-2 border-gray-200 focus:border-emerald-600 transition-all" placeholder="Admin password">
+         <input type="password" id="admin-password" required class="w-full px-4 py-3 pr-12 rounded-xl border-2 border-gray-200 focus:border-emerald-600 transition-all" placeholder="Admin password">
          <button type="button" onclick="togglePasswordVisibility('admin-password', 'admin-eye')" class="absolute right-4 top-[38px] text-gray-400 hover:text-gray-600 transition-colors">
           <span id="admin-eye" class="text-lg">👁️</span>
          </button>
@@ -412,7 +434,8 @@
      </div>
     </div>
    </div>
-   <!-- User Dashboard -->
+
+   <!-- User Dashboard (unchanged) -->
    <div id="user-dashboard" class="hidden h-full flex" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);">
     <aside class="w-64 bg-gradient-to-b from-emerald-700 to-teal-800 text-white flex flex-col">
      <div class="p-6 border-b border-emerald-600">
@@ -430,8 +453,7 @@
        <button onclick="showUserSection('settings')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl user-nav-item" data-section="settings"><span class="text-xl">⚙️</span><span>Settings</span></button>
       </div>
      </nav>
-    <div class="p-4 border-t border-emerald-600">
-     </div>
+     <div class="p-4 border-t border-emerald-600"></div>
     </aside>
     <main class="flex-1 overflow-auto">
      <header class="flex justify-between items-center p-6 bg-white shadow-sm mb-4">
@@ -452,30 +474,10 @@
      <section id="user-section-dashboard" class="p-6">
       <h2 class="text-2xl font-bold text-gray-800 mb-6 font-display">Dashboard Overview</h2>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover">
-        <div class="flex items-center justify-between">
-         <div><p class="text-gray-500 text-sm">Searches Made</p><p id="user-searches" class="text-2xl font-bold text-gray-800">0</p></div>
-         <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-2xl">🔍</span></div>
-        </div>
-       </div>
-       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover">
-        <div class="flex items-center justify-between">
-         <div><p class="text-gray-500 text-sm">Predictions</p><p id="user-predictions" class="text-2xl font-bold text-gray-800">0</p></div>
-         <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center"><span class="text-2xl">🤖</span></div>
-        </div>
-       </div>
-       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover">
-        <div class="flex items-center justify-between">
-         <div><p class="text-gray-500 text-sm">Commodities Tracked</p><p class="text-2xl font-bold text-gray-800">4</p></div>
-         <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center"><span class="text-2xl">🌽</span></div>
-        </div>
-       </div>
-       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover">
-        <div class="flex items-center justify-between">
-<div><p class="text-gray-500 text-sm">Markets Available</p><p id="user-markets-available" class="text-2xl font-bold text-gray-800">0</p></div>
-         <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center"><span class="text-2xl">🏪</span></div>
-        </div>
-       </div>
+       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Searches Made</p><p id="user-searches" class="text-2xl font-bold text-gray-800">0</p></div><div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-2xl">🔍</span></div></div></div>
+       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Predictions</p><p id="user-predictions" class="text-2xl font-bold text-gray-800">0</p></div><div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center"><span class="text-2xl">🤖</span></div></div></div>
+       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Commodities Tracked</p><p class="text-2xl font-bold text-gray-800">4</p></div><div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center"><span class="text-2xl">🌽</span></div></div></div>
+       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="flex items-center justify-between"><div><p class="text-gray-500 text-sm">Markets Available</p><p id="user-markets-available" class="text-2xl font-bold text-gray-800">0</p></div><div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center"><span class="text-2xl">🏪</span></div></div></div>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
        <div class="bg-white rounded-2xl p-6 shadow-lg">
@@ -495,81 +497,39 @@
          <div class="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border-l-4 border-amber-500"><p class="font-semibold text-amber-800">Wheat Demand Increasing</p><p class="text-sm text-gray-600 mt-1">Consider stocking for better prices</p></div>
         </div>
        </div>
+      </div>
      </section>
      <section id="user-section-market-search" class="hidden p-6" style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); min-height: 100%;">
       <h2 class="text-2xl font-bold text-gray-800 mb-6 font-display">Market Search</h2>
       <div class="bg-white rounded-2xl p-6 shadow-lg mb-6">
        <form id="market-search-form" onsubmit="handleMarketSearch(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-<div>
-         <label class="block text-gray-700 font-medium mb-2">Commodity</label>
-<select id="search-commodity" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500">
-          <option value="">Select Commodity</option>
-          <option value="Maize">Maize</option>
-          <option value="Paddy">Paddy</option>
-          <option value="Wheat">Wheat</option>
-          <option value="Sugarcane">Sugarcane</option>
-         </select>
-        </div>
-        <div>
-         <label class="block text-gray-700 font-medium mb-2">District</label>
-         <select id="search-district" required onchange="updateMarkets()" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500">
-          <option value="">Select District</option>
-          <option value="Kolar">Kolar</option>
-          <option value="Chikkabalpura">Chikkabalpura</option>
-          <option value="Bangalore Rural">Bangalore Rural</option>
-         </select>
-        </div>
-<div>
-         <label class="block text-gray-700 font-medium mb-2">Market</label>
-<select id="search-market" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500"><option value="">Select Market</option></select>
-        </div>
-        <div>
-         <label class="block text-gray-700 font-medium mb-2">Quantity (Quintals)</label>
-         <input type="number" id="search-quantity" required min="1" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500" placeholder="Enter quantity">
-        </div>
-        <div class="flex items-end">
-         <button type="submit" class="w-full py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-bold hover:shadow-lg transition-all">Search 🔍</button>
-        </div>
+        <div><label class="block text-gray-700 font-medium mb-2">Commodity</label><select id="search-commodity" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500"><option value="">Select Commodity</option><option value="Maize">Maize</option><option value="Paddy">Paddy</option><option value="Wheat">Wheat</option><option value="Sugarcane">Sugarcane</option></select></div>
+        <div><label class="block text-gray-700 font-medium mb-2">District</label><select id="search-district" required onchange="updateMarkets()" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500"><option value="">Select District</option><option value="Kolar">Kolar</option><option value="Chikkabalpura">Chikkabalpura</option><option value="Bangalore Rural">Bangalore Rural</option></select></div>
+        <div><label class="block text-gray-700 font-medium mb-2">Market</label><select id="search-market" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500"><option value="">Select Market</option></select></div>
+        <div><label class="block text-gray-700 font-medium mb-2">Quantity (Quintals)</label><input type="number" id="search-quantity" required min="1" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500" placeholder="Enter quantity"></div>
+        <div class="flex items-end"><button type="submit" class="w-full py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-bold hover:shadow-lg transition-all">Search 🔍</button></div>
        </form>
       </div>
-      
-      <!-- Search Results - Displayed after search -->
       <div id="search-results" class="hidden">
        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-2xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4">Latest Prices</h3><div id="price-results" class="space-y-3"></div></div>
         <div class="bg-white rounded-2xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4">Price Chart</h3><div class="chart-container"><canvas id="search-chart"></canvas></div></div>
        </div>
       </div>
-      
-      <!-- Remarks Section - Shown after search results -->
       <div class="bg-white rounded-2xl p-6 shadow-lg mb-6">
        <h3 class="text-lg font-bold text-gray-800 mb-4"> Remarks</h3>
        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-         <label class="block text-gray-700 font-medium mb-2">Your Remarks</label>
-         <textarea id="search-remarks" rows="3" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500" placeholder="Enter your remarks or feedback about this search..."></textarea>
-        </div>
-        <div class="flex items-end">
-         <button type="button" onclick="submitRemark(); return false;" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold hover:shadow-lg transition-all">Submit 📝</button>
-        </div>
+        <div><label class="block text-gray-700 font-medium mb-2">Your Remarks</label><textarea id="search-remarks" rows="3" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500" placeholder="Enter your remarks or feedback about this search..."></textarea></div>
+        <div class="flex items-end"><button type="button" onclick="submitRemark(); return false;" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold hover:shadow-lg transition-all">Submit 📝</button></div>
        </div>
       </div>
-      
-      <!-- Complaint Section - Shown after search results -->
       <div class="bg-white rounded-2xl p-6 shadow-lg mb-6" style="border-left: 4px solid #ef4444;">
        <h3 class="text-lg font-bold text-red-600 mb-4"> Complaint</h3>
        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-         <label class="block text-gray-700 font-medium mb-2">Your Complaint</label>
-         <textarea id="search-complaint" rows="3" class="w-full px-4 py-3 rounded-xl border-2 border-red-200 focus:border-red-500" placeholder="Enter your complaint about this search or market..."></textarea>
-        </div>
-        <div class="flex items-end">
-         <button type="button" onclick="submitComplaint(); return false;" class="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold hover:shadow-lg transition-all">Submit ⚠️</button>
-        </div>
+        <div><label class="block text-gray-700 font-medium mb-2">Your Complaint</label><textarea id="search-complaint" rows="3" class="w-full px-4 py-3 rounded-xl border-2 border-red-200 focus:border-red-500" placeholder="Enter your complaint about this search or market..."></textarea></div>
+        <div class="flex items-end"><button type="button" onclick="submitComplaint(); return false;" class="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold hover:shadow-lg transition-all">Submit ⚠️</button></div>
        </div>
       </div>
-      
-      <!-- User Complaints Response Section - Shown after search results -->
       <div class="bg-white rounded-2xl p-6 shadow-lg mb-6">
        <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-gray-800">Complaint Responses</h3>
@@ -583,50 +543,21 @@
      <section id="user-section-prediction" class="hidden p-6" style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); min-height: 100%;">
       <h2 class="text-2xl font-bold text-gray-800 mb-6 font-display">AI Price Prediction</h2>
       <div class="bg-white rounded-2xl p-6 shadow-lg mb-6">
-       <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center"><span class="text-xl">🤖</span></div>
-        <div><p class="font-semibold text-gray-800">Random Forest Regression Model</p><p class="text-sm text-gray-500">Accuracy: 94.2%</p></div>
-       </div>
+       <div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center"><span class="text-xl">🤖</span></div><div><p class="font-semibold text-gray-800">Random Forest Regression Model</p><p class="text-sm text-gray-500">Accuracy: 94.2%</p></div></div>
        <form id="prediction-form" onsubmit="handlePrediction(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <input type="hidden" id="pred-quantile" value="0.50">
-        <div>
-         <label class="block text-gray-700 font-medium mb-2">Commodity</label>
-         <select id="pred-commodity" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500">
-          <option value="">Select Commodity</option>
-          <option value="Maize">Maize</option>
-          <option value="Paddy">Paddy</option>
-          <option value="Wheat">Wheat</option>
-          <option value="Sugarcane">Sugarcane</option>
-         </select>
-        </div>
-        <div>
-         <label class="block text-gray-700 font-medium mb-2">District</label>
-         <select id="pred-district" required onchange="updatePredMarkets()" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500">
-          <option value="">Select District</option>
-          <option value="Kolar">Kolar</option>
-          <option value="Chikkabalpura">Chikkabalpura</option>
-          <option value="Bangalore Rural">Bangalore Rural</option>
-         </select>
-        </div>
-        <div>
-         <label class="block text-gray-700 font-medium mb-2">Market</label>
-         <select id="pred-market" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500"><option value="">Select Market</option></select>
-        </div>
-        <div>
-         <label class="block text-gray-700 font-medium mb-2">Quantity(Quintals)</label>
-         <input type="number" id="pred-quantity" required min="1" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500" placeholder="Enter quantity">
-        </div>
-        <div class="flex items-end">
-         <button type="submit" class="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold hover:shadow-lg transition-all">Predict 🔮</button>
-        </div>
+        <div><label class="block text-gray-700 font-medium mb-2">Commodity</label><select id="pred-commodity" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500"><option value="">Select Commodity</option><option value="Maize">Maize</option><option value="Paddy">Paddy</option><option value="Wheat">Wheat</option><option value="Sugarcane">Sugarcane</option></select></div>
+        <div><label class="block text-gray-700 font-medium mb-2">District</label><select id="pred-district" required onchange="updatePredMarkets()" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500"><option value="">Select District</option><option value="Kolar">Kolar</option><option value="Chikkabalpura">Chikkabalpura</option><option value="Bangalore Rural">Bangalore Rural</option></select></div>
+        <div><label class="block text-gray-700 font-medium mb-2">Market</label><select id="pred-market" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500"><option value="">Select Market</option></select></div>
+        <div><label class="block text-gray-700 font-medium mb-2">Quantity(Quintals)</label><input type="number" id="pred-quantity" required min="1" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500" placeholder="Enter quantity"></div>
+        <div class="flex items-end"><button type="submit" class="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold hover:shadow-lg transition-all">Predict 🔮</button></div>
        </form>
       </div>
-     <div id="prediction-results" class="hidden">
+      <div id="prediction-results" class="hidden">
        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div class="bg-white rounded-2xl p-6 shadow-lg card-hover"><p class="text-gray-500 text-sm mb-1">Current Price</p><p id="current-price" class="text-3xl font-bold text-gray-800">₹0</p><p class="text-sm text-gray-500">per quintal</p><p id="current-price-total" class="text-lg font-semibold text-emerald-600 mt-2 hidden">Total: ₹0</p></div>
         <div class="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl p-6 shadow-lg card-hover text-white"><p class="text-purple-200 text-sm mb-1">Predicted Price</p><p id="predicted-price" class="text-3xl font-bold">₹0</p><p class="text-sm text-purple-200">next week estimate</p><p id="predicted-price-total" class="text-lg font-semibold text-purple-200 mt-2 hidden">Total: ₹0</p></div>
        </div>
-       <!-- Quantity Input (Editable after prediction) -->
        <div class="bg-white rounded-2xl p-4 shadow-lg mb-4">
         <label class="block text-gray-700 font-medium mb-2">Adjust Quantity (Quintals)</label>
         <input type="number" id="pred-quantity-after" min="1" class="w-full md:w-1/3 px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-500" placeholder="Enter quantity" onchange="updatePredictionFromQuantity()">
@@ -635,14 +566,11 @@
        <div class="bg-white rounded-2xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4">Price Forecast</h3><div class="chart-container"><canvas id="prediction-chart"></canvas></div></div>
       </div>
      </section>
-<section id="user-section-profile" class="hidden p-6" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); min-height: 100%;">
+     <section id="user-section-profile" class="hidden p-6" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); min-height: 100%;">
       <h2 id="profile-heading" class="text-2xl font-bold text-gray-800 mb-6 font-display">My Profile</h2>
       <div class="max-w-2xl">
        <div class="bg-white rounded-2xl p-8 shadow-lg">
-        <div class="flex items-center gap-6 mb-8">
-         <div class="w-24 h-24 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-4xl text-white shadow-lg">👤</div>
-         <div><h3 id="profile-name" class="text-2xl font-bold text-gray-800">User Name</h3><p class="text-emerald-600">Active Member</p></div>
-        </div>
+        <div class="flex items-center gap-6 mb-8"><div class="w-24 h-24 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-4xl text-white shadow-lg">👤</div><div><h3 id="profile-name" class="text-2xl font-bold text-gray-800">User Name</h3><p class="text-emerald-600">Active Member</p></div></div>
         <div class="space-y-4">
          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl"><div class="flex items-center gap-3"><span class="text-xl">📧</span><span class="text-gray-600">Email</span></div><span id="profile-email" class="font-medium text-gray-800">user@email.com</span></div>
          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl"><div class="flex items-center gap-3"><span class="text-xl">📱</span><span class="text-gray-600">Mobile</span></div><span id="profile-phone" class="font-medium text-gray-800">+91 XXXXXXXXXX</span></div>
@@ -659,349 +587,88 @@
      <section id="user-section-settings" class="hidden p-6" style="background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); min-height: 100%;">
       <h2 class="text-2xl font-bold text-white mb-6 font-display">Settings</h2>
       <div class="max-w-2xl space-y-4">
-       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6">
-        <div class="flex items-center justify-between">
-         <div class="flex items-center gap-3"><span class="text-2xl">🌙</span><div><p class="text-white font-semibold">Dark Theme</p><p class="text-emerald-200 text-sm">Toggle dark mode appearance</p></div></div>
-         <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="dark-theme-toggle" class="sr-only peer"><div class="w-14 h-7 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div></label>
-        </div>
-       </div>
-       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6">
-        <div class="flex items-center justify-between">
-         <div class="flex items-center gap-3"><span class="text-2xl">🔔</span><div><p class="text-white font-semibold">Notifications</p><p class="text-emerald-200 text-sm">Receive price alerts and updates</p></div></div>
-         <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="notifications-toggle" checked class="sr-only peer"><div class="w-14 h-7 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div></label>
-        </div>
-       </div>
-       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6">
-        <div class="flex items-center justify-between">
-         <div class="flex items-center gap-3"><span class="text-2xl">🔐</span><div><p class="text-white font-semibold">Change Password</p><p class="text-emerald-200 text-sm">Update your account password</p></div></div>
-         <button onclick="showChangePasswordModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-500 transition-all">Change</button>
-        </div>
-       </div>
+       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6"><div class="flex items-center justify-between"><div class="flex items-center gap-3"><span class="text-2xl">🌙</span><div><p class="text-white font-semibold">Dark Theme</p><p class="text-emerald-200 text-sm">Toggle dark mode appearance</p></div></div><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="dark-theme-toggle" class="sr-only peer"><div class="w-14 h-7 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div></label></div></div>
+       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6"><div class="flex items-center justify-between"><div class="flex items-center gap-3"><span class="text-2xl">🔔</span><div><p class="text-white font-semibold">Notifications</p><p class="text-emerald-200 text-sm">Receive price alerts and updates</p></div></div><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="notifications-toggle" checked class="sr-only peer"><div class="w-14 h-7 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div></label></div></div>
+       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6"><div class="flex items-center justify-between"><div class="flex items-center gap-3"><span class="text-2xl">🔐</span><div><p class="text-white font-semibold">Change Password</p><p class="text-emerald-200 text-sm">Update your account password</p></div></div><button onclick="showChangePasswordModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-500 transition-all">Change</button></div></div>
       </div>
      </section>
     </main>
    </div>
-   <!-- Admin Dashboard -->
+
+   <!-- Admin Dashboard (unchanged structure) -->
    <div id="admin-dashboard" class="hidden h-full flex" style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%);">
     <aside class="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col">
-     <div class="p-6 border-b border-gray-700">
-      <div class="flex items-center gap-3">
-       <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center"><span class="text-xl">🛡️</span></div>
-       <span class="font-bold text-lg">Admin Panel</span>
-      </div>
-     </div>
-     <nav class="flex-1 p-4">
-      <div class="space-y-2">
-       <button onclick="showAdminSection('dashboard')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="dashboard"><span class="text-xl">📊</span><span>Dashboard</span></button>
-<button onclick="showAdminSection('control')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="control"><span class="text-xl">🎛️</span><span>Market Center</span></button>
-       <button onclick="showAdminSection('data')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="data"><span class="text-xl">💾</span><span>Data Management</span></button>
-       <button onclick="showAdminSection('activity')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="activity"><span class="text-xl">📈</span><span>Activity Monitor</span></button>
-       <button onclick="showAdminSection('users')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="users"><span class="text-xl">👥</span><span>Manage Users</span></button>
-       <button onclick="showAdminSection('profile')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="profile"><span class="text-xl">👤</span><span>Profile</span></button>
-      </div>
-     </nav>
+     <div class="p-6 border-b border-gray-700"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center"><span class="text-xl">🛡️</span></div><span class="font-bold text-lg">Admin Panel</span></div></div>
+     <nav class="flex-1 p-4"><div class="space-y-2">
+      <button onclick="showAdminSection('dashboard')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="dashboard"><span class="text-xl">📊</span><span>Dashboard</span></button>
+      <button onclick="showAdminSection('control')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="control"><span class="text-xl">🎛️</span><span>Market Center</span></button>
+      <button onclick="showAdminSection('data')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="data"><span class="text-xl">💾</span><span>Data Management</span></button>
+      <button onclick="showAdminSection('activity')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="activity"><span class="text-xl">📈</span><span>Activity Monitor</span></button>
+      <button onclick="showAdminSection('users')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="users"><span class="text-xl">👥</span><span>Manage Users</span></button>
+      <button onclick="showAdminSection('profile')" class="w-full sidebar-item flex items-center gap-3 p-3 rounded-xl admin-nav-item" data-section="profile"><span class="text-xl">👤</span><span>Profile</span></button>
+     </div></nav>
     </aside>
     <main class="flex-1 overflow-auto">
      <header class="flex justify-between items-center p-6 bg-gray-800 shadow-sm mb-4">
       <h2 class="text-2xl font-bold text-white font-display">Admin Panel</h2>
       <div class="flex items-center gap-4">
-      <div class="flex items-center gap-3">
-       <div class="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white"><span>🛡️</span></div>
-       <div>
-        <p id="admin-header-name" class="font-semibold text-white">Admin</p>
-        <p class="text-emerald-400 text-xs font-medium">● Active</p>
-       </div>
-      </div>
-       <button onclick="handleLogout()" class="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-all shadow-lg">
-        <span>🚪</span><span>Logout</span>
-       </button>
+       <div class="flex items-center gap-3"><div class="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white"><span>🛡️</span></div><div><p id="admin-header-name" class="font-semibold text-white">Admin</p><p class="text-emerald-400 text-xs font-medium">● Active</p></div></div>
+       <button onclick="handleLogout()" class="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-all shadow-lg"><span>🚪</span><span>Logout</span></button>
       </div>
      </header>
      <section id="admin-section-dashboard" class="p-6">
       <h2 class="text-2xl font-bold text-white mb-6 font-display">Admin Dashboard</h2>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-       <div class="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl p-5 shadow-lg card-hover">
-        <div class="flex items-center justify-between">
-         <div><p class="text-emerald-200 text-sm">Total Users</p><p id="admin-total-users" class="text-3xl font-bold text-white">0</p></div>
-         <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center"><span class="text-2xl">👥</span></div>
-        </div>
-       </div>
-       <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 shadow-lg card-hover">
-        <div class="flex items-center justify-between">
-         <div><p class="text-blue-200 text-sm">Total Activities</p><p id="admin-total-activities" class="text-3xl font-bold text-white">0</p></div>
-         <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center"><span class="text-2xl">📊</span></div>
-        </div>
-       </div>
-       <div class="bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl p-5 shadow-lg card-hover">
-        <div class="flex items-center justify-between">
-         <div><p class="text-purple-200 text-sm">Predictions Made</p><p id="admin-predictions" class="text-3xl font-bold text-white">0</p></div>
-         <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center"><span class="text-2xl">🤖</span></div>
-        </div>
-       </div>
-       <div class="bg-gradient-to-br from-amber-600 to-amber-700 rounded-2xl p-5 shadow-lg card-hover">
-        <div class="flex items-center justify-between">
-         <div><p class="text-amber-200 text-sm">Market Records</p><p id="admin-records" class="text-3xl font-bold text-white">0</p></div>
-         <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center"><span class="text-2xl">📈</span></div>
-        </div>
-       </div>
+       <div class="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl p-5 shadow-lg card-hover"><div class="flex items-center justify-between"><div><p class="text-emerald-200 text-sm">Total Users</p><p id="admin-total-users" class="text-3xl font-bold text-white">0</p></div><div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center"><span class="text-2xl">👥</span></div></div></div>
+       <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 shadow-lg card-hover"><div class="flex items-center justify-between"><div><p class="text-blue-200 text-sm">Total Activities</p><p id="admin-total-activities" class="text-3xl font-bold text-white">0</p></div><div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center"><span class="text-2xl">📊</span></div></div></div>
+       <div class="bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl p-5 shadow-lg card-hover"><div class="flex items-center justify-between"><div><p class="text-purple-200 text-sm">Predictions Made</p><p id="admin-predictions" class="text-3xl font-bold text-white">0</p></div><div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center"><span class="text-2xl">🤖</span></div></div></div>
+       <div class="bg-gradient-to-br from-amber-600 to-amber-700 rounded-2xl p-5 shadow-lg card-hover"><div class="flex items-center justify-between"><div><p class="text-amber-200 text-sm">Market Records</p><p id="admin-records" class="text-3xl font-bold text-white">0</p></div><div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center"><span class="text-2xl">📈</span></div></div></div>
       </div>
       <div class="bg-gray-800 rounded-2xl p-6 shadow-lg"><h3 class="text-lg font-bold text-white mb-4">System Overview</h3><div class="chart-container"><canvas id="admin-overview-chart"></canvas></div></div>
      </section>
      <section id="admin-section-control" class="hidden p-6" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); min-height: 100%;">
       <h2 class="text-2xl font-bold text-white mb-6 font-display">Market Center</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6">
-        <div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center"><span class="text-xl">🌽</span></div><h3 class="text-lg font-bold text-white">Commodities</h3></div>
-        <div class="space-y-2">
-         <div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Maize</span><span class="text-emerald-400">Active</span></div>
-         <div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Paddy</span><span class="text-emerald-400">Active</span></div>
-         <div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Wheat</span><span class="text-emerald-400">Active</span></div>
-         <div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Sugarcane</span><span class="text-emerald-400">Active</span></div>
-        </div>
-       </div>
-       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6">
-        <div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center"><span class="text-xl">📍</span></div><h3 class="text-lg font-bold text-white">Districts</h3></div>
-        <div class="space-y-2">
-         <div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Kolar</span><span class="text-blue-400">5 Markets</span></div>
-         <div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Chikkabalpura</span><span class="text-blue-400">5 Markets</span></div>
-         <div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Bangalore Rural</span><span class="text-blue-400">5 Markets</span></div>
-        </div>
-       </div>
-       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6">
-        <div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center"><span class="text-xl">🏪</span></div><h3 class="text-lg font-bold text-white">Markets</h3></div>
-       <div id="markets-list" class="space-y-2 max-h-48 overflow-y-auto">
-         <!-- Markets will be dynamically populated -->
-         <div class="p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white text-sm">Loading markets...</span></div>
-       </div>
-       <div class="mt-4 pt-3 border-t border-white border-opacity-20">
-         <p id="markets-count" class="text-white text-sm">Total: 0 Markets</p>
-       </div>
-       </div>
+       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center"><span class="text-xl">🌽</span></div><h3 class="text-lg font-bold text-white">Commodities</h3></div><div class="space-y-2"><div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Maize</span><span class="text-emerald-400">Active</span></div><div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Paddy</span><span class="text-emerald-400">Active</span></div><div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Wheat</span><span class="text-emerald-400">Active</span></div><div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Sugarcane</span><span class="text-emerald-400">Active</span></div></div></div>
+       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center"><span class="text-xl">📍</span></div><h3 class="text-lg font-bold text-white">Districts</h3></div><div class="space-y-2"><div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Kolar</span><span class="text-blue-400">5 Markets</span></div><div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Chikkabalpura</span><span class="text-blue-400">5 Markets</span></div><div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white">Bangalore Rural</span><span class="text-blue-400">5 Markets</span></div></div></div>
+       <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center"><span class="text-xl">🏪</span></div><h3 class="text-lg font-bold text-white">Markets</h3></div><div id="markets-list" class="space-y-2 max-h-48 overflow-y-auto"><div class="p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white text-sm">Loading markets...</span></div></div><div class="mt-4 pt-3 border-t border-white border-opacity-20"><p id="markets-count" class="text-white text-sm">Total: 0 Markets</p></div></div>
       </div>
-      <!-- User Complaints Section -->
-      <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6" style="border-left: 4px solid #ef4444;">
-       <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center"><span class="text-xl">⚠️</span></div>
-        <h3 class="text-lg font-bold text-white">User Complaints</h3>
-        <button onclick="loadAdminComplaints()" class="ml-auto px-3 py-1 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-500">Refresh 🔄</button>
-       </div>
-       <div id="admin-complaints-list" class="space-y-2 max-h-64 overflow-y-auto">
-        <div class="p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white text-sm">Loading complaints...</span></div>
-       </div>
-       <div class="mt-4 pt-3 border-t border-white border-opacity-20">
-        <p id="complaints-count" class="text-white text-sm">Total: 0 Complaints</p>
-       </div>
-      </div>
-     <!-- User Remarks Section -->
-      <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6">
-       <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center"><span class="text-xl">📝</span></div>
-        <h3 class="text-lg font-bold text-white">User Remarks</h3>
-       </div>
-       <div id="remarks-list" class="space-y-2 max-h-64 overflow-y-auto">
-         <div class="p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white text-sm">Loading remarks...</span></div>
-       </div>
-       <div class="mt-4 pt-3 border-t border-white border-opacity-20">
-         <p id="remarks-count" class="text-white text-sm">Total: 0 Remarks</p>
-       </div>
-      </div>
+      <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6" style="border-left: 4px solid #ef4444;"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center"><span class="text-xl">⚠️</span></div><h3 class="text-lg font-bold text-white">User Complaints</h3><button onclick="loadAdminComplaints()" class="ml-auto px-3 py-1 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-500">Refresh 🔄</button></div><div id="admin-complaints-list" class="space-y-2 max-h-64 overflow-y-auto"><div class="p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white text-sm">Loading complaints...</span></div></div><div class="mt-4 pt-3 border-t border-white border-opacity-20"><p id="complaints-count" class="text-white text-sm">Total: 0 Complaints</p></div></div>
+      <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-6"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center"><span class="text-xl">📝</span></div><h3 class="text-lg font-bold text-white">User Remarks</h3></div><div id="remarks-list" class="space-y-2 max-h-64 overflow-y-auto"><div class="p-3 bg-white bg-opacity-10 rounded-xl"><span class="text-white text-sm">Loading remarks...</span></div></div><div class="mt-4 pt-3 border-t border-white border-opacity-20"><p id="remarks-count" class="text-white text-sm">Total: 0 Remarks</p></div></div>
      </section>
      <section id="admin-section-data" class="hidden p-6" style="background: linear-gradient(135deg, #134e4a 0%, #0d9488 100%); min-height: 100%;">
       <h2 class="text-3xl font-bold text-white mb-6 font-display">Data Management</h2>
-      
-      <!-- Tabs for Data Management -->
       <div class="flex gap-2 mb-6">
        <button onclick="showDataTab('import')" id="data-tab-import" class="px-4 py-2 bg-white text-teal-700 rounded-xl font-semibold">Import Data</button>
        <button onclick="showDataTab('markets')" id="data-tab-markets" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-xl font-semibold hover:bg-opacity-30">Manage Markets</button>
        <button onclick="showDataTab('records')" id="data-tab-records" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-xl font-semibold hover:bg-opacity-30">Price Records</button>
       </div>
-      
-      <!-- Import Data Tab -->
       <div id="data-content-import">
-      <!-- Dataset Import Section -->
-      <div class="bg-white rounded-2xl p-6 shadow-lg mb-6">
-       <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
-         <div class="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center"><span class="text-xl">📁</span></div>
-         <div><h3 class="font-bold text-gray-800">Import Dataset</h3><p class="text-sm text-gray-500">Upload CSV or JSON files for accurate predictions</p></div>
-        </div>
-        <button onclick="showDatasetImportModal()" class="px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"><span>📥</span><span>Import Data</span></button>
-       </div>
-       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="p-4 bg-gray-50 rounded-xl"><p class="text-gray-500 text-sm">Last Import</p><p id="last-import-date" class="font-semibold text-gray-800">Never</p></div>
-        <div class="p-4 bg-gray-50 rounded-xl"><p class="text-gray-500 text-sm">Imported Records</p><p id="imported-records-count" class="font-semibold text-gray-800">0</p></div>
-        <div class="p-4 bg-gray-50 rounded-xl"><p class="text-gray-500 text-sm">Data Source</p><p id="data-source-status" class="font-semibold text-gray-800">Default</p></div>
-       </div>
+       <div class="bg-white rounded-2xl p-6 shadow-lg mb-6"><div class="flex items-center justify-between mb-4"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center"><span class="text-xl">📁</span></div><div><h3 class="font-bold text-gray-800">Import Dataset</h3><p class="text-sm text-gray-500">Upload CSV or JSON files for accurate predictions</p></div></div><button onclick="showDatasetImportModal()" class="px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"><span>📥</span><span>Import Data</span></button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="p-4 bg-gray-50 rounded-xl"><p class="text-gray-500 text-sm">Last Import</p><p id="last-import-date" class="font-semibold text-gray-800">Never</p></div><div class="p-4 bg-gray-50 rounded-xl"><p class="text-gray-500 text-sm">Imported Records</p><p id="imported-records-count" class="font-semibold text-gray-800">0</p></div><div class="p-4 bg-gray-50 rounded-xl"><p class="text-gray-500 text-sm">Data Source</p><p id="data-source-status" class="font-semibold text-gray-800">Default</p></div></div></div>
+       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"><div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><p class="text-teal-100 text-sm">Total Records</p><p id="data-total-records" class="text-3xl font-bold text-white">0</p></div><div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><p class="text-teal-100 text-sm">Total Commodities</p><p class="text-3xl font-bold text-white">4</p></div><div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><p class="text-teal-100 text-sm">Total Districts</p><p class="text-3xl font-bold text-white">3</p></div><div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><p class="text-teal-100 text-sm">Total Markets</p><p id="data-total-markets" class="text-3xl font-bold text-white">0</p></div></div>
+       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"><div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="text-center"><span class="text-4xl mb-2 block">🌽</span><p class="font-bold text-gray-800">Maize</p><p class="text-sm text-gray-500 mt-1">Avg: ₹2,150/quintal</p></div></div><div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="text-center"><span class="text-4xl mb-2 block">🌾</span><p class="font-bold text-gray-800">Paddy</p><p class="text-sm text-gray-500 mt-1">Avg: ₹1,940/quintal</p></div></div><div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="text-center"><span class="text-4xl mb-2 block">🌿</span><p class="font-bold text-gray-800">Wheat</p><p class="text-sm text-gray-500 mt-1">Avg: ₹2,275/quintal</p></div></div><div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="text-center"><span class="text-4xl mb-2 block">🎋</span><p class="font-bold text-gray-800">Sugarcane</p><p class="text-sm text-gray-500 mt-1">Avg: ₹310/quintal</p></div></div></div>
+       <div class="bg-white rounded-2xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4">Records per Commodity</h3><div class="chart-container"><canvas id="data-chart"></canvas></div></div>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-       <div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><p class="text-teal-100 text-sm">Total Records</p><p id="data-total-records" class="text-3xl font-bold text-white">0</p></div>
-       <div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><p class="text-teal-100 text-sm">Total Commodities</p><p class="text-3xl font-bold text-white">4</p></div>
-       <div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><p class="text-teal-100 text-sm">Total Districts</p><p class="text-3xl font-bold text-white">3</p></div>
-       <div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><p class="text-teal-100 text-sm">Total Markets</p><p id="data-total-markets" class="text-3xl font-bold text-white">0</p></div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="text-center"><span class="text-4xl mb-2 block">🌽</span><p class="font-bold text-gray-800">Maize</p><p class="text-sm text-gray-500 mt-1">Avg: ₹2,150/quintal</p></div></div>
-       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="text-center"><span class="text-4xl mb-2 block">🌾</span><p class="font-bold text-gray-800">Paddy</p><p class="text-sm text-gray-500 mt-1">Avg: ₹1,940/quintal</p></div></div>
-       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="text-center"><span class="text-4xl mb-2 block">🌿</span><p class="font-bold text-gray-800">Wheat</p><p class="text-sm text-gray-500 mt-1">Avg: ₹2,275/quintal</p></div></div>
-       <div class="bg-white rounded-2xl p-5 shadow-lg card-hover"><div class="text-center"><span class="text-4xl mb-2 block">🎋</span><p class="font-bold text-gray-800">Sugarcane</p><p class="text-sm text-gray-500 mt-1">Avg: ₹310/quintal</p></div></div>
-      </div>
-      <div class="bg-white rounded-2xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4">Records per Commodity</h3><div class="chart-container"><canvas id="data-chart"></canvas></div></div>
-      </div>
-      
-      <!-- Manage Markets Tab -->
-      <div id="data-content-markets" class="hidden">
-       <div class="bg-white rounded-2xl p-6 shadow-lg mb-6">
-        <div class="flex items-center justify-between mb-4">
-         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center"><span class="text-xl">🏪</span></div>
-          <div><h3 class="font-bold text-gray-800">Markets Management</h3><p class="text-sm text-gray-500">Add, edit, or delete markets</p></div>
-         </div>
-         <button onclick="showAddMarketModal()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"><span>➕</span><span>Add Market</span></button>
-        </div>
-        <div class="overflow-x-auto">
-         <table class="w-full">
-          <thead class="bg-gray-100">
-           <tr>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">#</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">District</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Market Name</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Records</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Avg Price</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-           </tr>
-          </thead>
-          <tbody id="markets-table-body">
-           <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Loading markets...</td></tr>
-          </tbody>
-         </table>
-        </div>
-       </div>
-      </div>
-      
-      <!-- Price Records Tab -->
-      <div id="data-content-records" class="hidden">
-       <div class="bg-white rounded-2xl p-6 shadow-lg mb-6">
-        <div class="flex items-center justify-between mb-4">
-         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-xl">📊</span></div>
-          <div><h3 class="font-bold text-gray-800">Price Records</h3><p class="text-sm text-gray-500">View and manage price records</p></div>
-         </div>
-        </div>
-        <!-- Filters -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-         <div>
-          <label class="block text-gray-700 text-sm font-medium mb-1">Commodity</label>
-          <select id="record-filter-commodity" class="w-full px-3 py-2 rounded-xl border border-gray-300">
-           <option value="">All Commodities</option>
-           <option value="Maize">Maize</option>
-           <option value="Paddy">Paddy</option>
-           <option value="Wheat">Wheat</option>
-           <option value="Sugarcane">Sugarcane</option>
-          </select>
-         </div>
-         <div>
-          <label class="block text-gray-700 text-sm font-medium mb-1">District</label>
-          <select id="record-filter-district" class="w-full px-3 py-2 rounded-xl border border-gray-300">
-           <option value="">All Districts</option>
-           <option value="Kolar">Kolar</option>
-           <option value="Chikkabalpura">Chikkabalpura</option>
-           <option value="Bangalore Rural">Bangalore Rural</option>
-          </select>
-         </div>
-         <div class="flex items-end">
-          <button onclick="loadPriceRecords()" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold">Apply Filters</button>
-         </div>
-        </div>
-        <div class="overflow-x-auto">
-         <table class="w-full">
-          <thead class="bg-gray-100">
-           <tr>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Commodity</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Price</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">District</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Market</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-           </tr>
-          </thead>
-          <tbody id="price-records-table-body">
-           <tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Loading records...</td></tr>
-          </tbody>
-         </table>
-        </div>
-        <!-- Pagination -->
-        <div class="flex items-center justify-between mt-4">
-         <p id="records-pagination-info" class="text-sm text-gray-500">Showing 0 records</p>
-         <div class="flex gap-2">
-          <button onclick="changeRecordsPage(-1)" class="px-3 py-1 bg-gray-200 rounded-lg text-sm">Previous</button>
-          <button onclick="changeRecordsPage(1)" class="px-3 py-1 bg-gray-200 rounded-lg text-sm">Next</button>
-         </div>
-        </div>
-       </div>
-      </div>
+      <div id="data-content-markets" class="hidden"><div class="bg-white rounded-2xl p-6 shadow-lg mb-6"><div class="flex items-center justify-between mb-4"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center"><span class="text-xl">🏪</span></div><div><h3 class="font-bold text-gray-800">Markets Management</h3><p class="text-sm text-gray-500">Add, edit, or delete markets</p></div></div><button onclick="showAddMarketModal()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"><span>➕</span><span>Add Market</span></button></div><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-100"><tr><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">#</th><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">District</th><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Market Name</th><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Records</th><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Avg Price</th><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th></tr></thead><tbody id="markets-table-body"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Loading markets...</td></tr></tbody></table></div></div></div>
+      <div id="data-content-records" class="hidden"><div class="bg-white rounded-2xl p-6 shadow-lg mb-6"><div class="flex items-center justify-between mb-4"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center"><span class="text-xl">📊</span></div><div><h3 class="font-bold text-gray-800">Price Records</h3><p class="text-sm text-gray-500">View and manage price records</p></div></div></div><div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4"><div><label class="block text-gray-700 text-sm font-medium mb-1">Commodity</label><select id="record-filter-commodity" class="w-full px-3 py-2 rounded-xl border border-gray-300"><option value="">All Commodities</option><option value="Maize">Maize</option><option value="Paddy">Paddy</option><option value="Wheat">Wheat</option><option value="Sugarcane">Sugarcane</option></select></div><div><label class="block text-gray-700 text-sm font-medium mb-1">District</label><select id="record-filter-district" class="w-full px-3 py-2 rounded-xl border border-gray-300"><option value="">All Districts</option><option value="Kolar">Kolar</option><option value="Chikkabalpura">Chikkabalpura</option><option value="Bangalore Rural">Bangalore Rural</option></select></div><div class="flex items-end"><button onclick="loadPriceRecords()" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold">Apply Filters</button></div></div><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-100"><tr><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">ID</th><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Commodity</th><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Price</th><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">District</th><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Market</th><th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th></tr></thead><tbody id="price-records-table-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Loading records...</td></tr></tbody></table></div><div class="flex items-center justify-between mt-4"><p id="records-pagination-info" class="text-sm text-gray-500">Showing 0 records</p><div class="flex gap-2"><button onclick="changeRecordsPage(-1)" class="px-3 py-1 bg-gray-200 rounded-lg text-sm">Previous</button><button onclick="changeRecordsPage(1)" class="px-3 py-1 bg-gray-200 rounded-lg text-sm">Next</button></div></div></div></div>
      </section>
      <section id="admin-section-activity" class="hidden p-6" style="background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%); min-height: 100%;">
       <h2 class="text-2xl font-bold text-white mb-6 font-display">Activity Monitor</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-       <div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><div class="flex items-center justify-between"><div><p class="text-cyan-100 text-sm">Market Searches</p><p id="activity-searches" class="text-3xl font-bold text-white">0</p></div><span class="text-4xl">🔍</span></div></div>
-       <div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><div class="flex items-center justify-between"><div><p class="text-cyan-100 text-sm">Predictions Made</p><p id="activity-predictions" class="text-3xl font-bold text-white">0</p></div><span class="text-4xl">🤖</span></div></div>
-       <div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><div class="flex items-center justify-between"><div><p class="text-cyan-100 text-sm">Total Activities</p><p id="activity-total" class="text-3xl font-bold text-white">0</p></div><span class="text-4xl">📊</span></div></div>
-      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><div class="flex items-center justify-between"><div><p class="text-cyan-100 text-sm">Market Searches</p><p id="activity-searches" class="text-3xl font-bold text-white">0</p></div><span class="text-4xl">🔍</span></div></div><div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><div class="flex items-center justify-between"><div><p class="text-cyan-100 text-sm">Predictions Made</p><p id="activity-predictions" class="text-3xl font-bold text-white">0</p></div><span class="text-4xl">🤖</span></div></div><div class="bg-white bg-opacity-20 backdrop-blur rounded-2xl p-5"><div class="flex items-center justify-between"><div><p class="text-cyan-100 text-sm">Total Activities</p><p id="activity-total" class="text-3xl font-bold text-white">0</p></div><span class="text-4xl">📊</span></div></div></div>
       <div class="bg-white rounded-2xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4">Recent Activity Timeline</h3><div id="activity-timeline" class="space-y-4 max-h-96 overflow-y-auto"><p class="text-gray-500 text-center py-8">No activities recorded yet</p></div></div>
      </section>
      <section id="admin-section-users" class="hidden p-6" style="background: linear-gradient(135deg, #374151 0%, #4b5563 100%); min-height: 100%;">
       <h2 class="text-2xl font-bold text-white mb-6 font-display">Manage Users</h2>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-       <div class="bg-emerald-600 rounded-2xl p-5"><p class="text-emerald-200 text-sm">Total Users</p><p id="users-total" class="text-3xl font-bold text-white">0</p></div>
-       <div class="bg-blue-600 rounded-2xl p-5"><p class="text-blue-200 text-sm">Active Users</p><p id="users-active" class="text-3xl font-bold text-white">0</p></div>
-       <div class="bg-purple-600 rounded-2xl p-5"><p class="text-purple-200 text-sm">Admin Accounts</p><p id="users-admins" class="text-3xl font-bold text-white">0</p></div>
-       <div class="bg-amber-600 rounded-2xl p-5"><p class="text-amber-200 text-sm">Registered Today</p><p id="users-today" class="text-3xl font-bold text-white">0</p></div>
-      </div>
-      <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-       <div class="overflow-x-auto">
-        <table class="w-full">
-         <thead class="bg-gray-100">
-          <tr>
-           <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Username</th>
-           <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
-           <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Mobile</th>
-           <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Role</th>
-           <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-           <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created</th>
-           <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
-          </tr>
-         </thead>
-         <tbody id="users-table-body">
-          <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No users registered yet</td></tr>
-         </tbody>
-        </table>
-       </div>
-      </div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"><div class="bg-emerald-600 rounded-2xl p-5"><p class="text-emerald-200 text-sm">Total Users</p><p id="users-total" class="text-3xl font-bold text-white">0</p></div><div class="bg-blue-600 rounded-2xl p-5"><p class="text-blue-200 text-sm">Active Users</p><p id="users-active" class="text-3xl font-bold text-white">0</p></div><div class="bg-purple-600 rounded-2xl p-5"><p class="text-purple-200 text-sm">Admin Accounts</p><p id="users-admins" class="text-3xl font-bold text-white">0</p></div><div class="bg-amber-600 rounded-2xl p-5"><p class="text-amber-200 text-sm">Registered Today</p><p id="users-today" class="text-3xl font-bold text-white">0</p></div></div>
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden"><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-100"><tr><th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Username</th><th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th><th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Mobile</th><th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Role</th><th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th><th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created</th><th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th></tr></thead><tbody id="users-table-body"><tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No users registered yet</td></tr></tbody></table></div></div>
      </section>
      <section id="admin-section-profile" class="hidden p-6" style="background: linear-gradient(135deg, #065f46 0%, #047857 100%); min-height: 100%;">
       <h2 class="text-2xl font-bold text-white mb-6 font-display">Admin Profile</h2>
-      <div class="max-w-2xl">
-       <div class="bg-white rounded-2xl p-8 shadow-lg">
-        <div class="flex items-center gap-6 mb-8">
-         <div class="w-24 h-24 bg-gradient-to-br from-emerald-800 to-emerald-600 rounded-full flex items-center justify-center text-4xl text-white shadow-lg">🛡️</div>
-         <div><h3 id="admin-profile-name" class="text-2xl font-bold text-gray-800">Admin</h3><p class="text-emerald-600">System Administrator</p></div>
-        </div>
-        <div class="space-y-4">
-         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl"><div class="flex items-center gap-3"><span class="text-xl">📧</span><span class="text-gray-600">Email</span></div><span id="admin-profile-email" class="font-medium text-gray-800">admin@agripredict.com</span></div>
-         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl"><div class="flex items-center gap-3"><span class="text-xl">📱</span><span class="text-gray-600">Mobile</span></div><span id="admin-profile-phone" class="font-medium text-gray-800">+91 XXXXXXXXXX</span></div>
-         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl"><div class="flex items-center gap-3"><span class="text-xl">🔐</span><span class="text-gray-600">Password</span></div><span class="font-medium text-gray-800">••••••••</span></div>
-         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl"><div class="flex items-center gap-3"><span class="text-xl">🛡️</span><span class="text-gray-600">Role</span></div><span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">Administrator</span></div>
-        </div>
-        <div class="mt-8 flex gap-4">
-         <button onclick="showAdminEditProfileModal()" class="flex-1 py-3 bg-gradient-to-r from-emerald-700 to-emerald-600 text-white rounded-xl font-bold hover:shadow-lg transition-all">Edit Profile</button>
-         <button onclick="showChangePasswordModal()" class="flex-1 py-3 border-2 border-emerald-700 text-emerald-700 rounded-xl font-bold hover:bg-emerald-50 transition-all">Change Password</button>
-        </div>
-       </div>
-      </div>
+      <div class="max-w-2xl"><div class="bg-white rounded-2xl p-8 shadow-lg"><div class="flex items-center gap-6 mb-8"><div class="w-24 h-24 bg-gradient-to-br from-emerald-800 to-emerald-600 rounded-full flex items-center justify-center text-4xl text-white shadow-lg">🛡️</div><div><h3 id="admin-profile-name" class="text-2xl font-bold text-gray-800">Admin</h3><p class="text-emerald-600">System Administrator</p></div></div><div class="space-y-4"><div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl"><div class="flex items-center gap-3"><span class="text-xl">📧</span><span class="text-gray-600">Email</span></div><span id="admin-profile-email" class="font-medium text-gray-800">admin@agripredict.com</span></div><div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl"><div class="flex items-center gap-3"><span class="text-xl">📱</span><span class="text-gray-600">Mobile</span></div><span id="admin-profile-phone" class="font-medium text-gray-800">+91 XXXXXXXXXX</span></div><div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl"><div class="flex items-center gap-3"><span class="text-xl">🔐</span><span class="text-gray-600">Password</span></div><span class="font-medium text-gray-800">••••••••</span></div><div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl"><div class="flex items-center gap-3"><span class="text-xl">🛡️</span><span class="text-gray-600">Role</span></div><span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">Administrator</span></div></div><div class="mt-8 flex gap-4"><button onclick="showAdminEditProfileModal()" class="flex-1 py-3 bg-gradient-to-r from-emerald-700 to-emerald-600 text-white rounded-xl font-bold hover:shadow-lg transition-all">Edit Profile</button><button onclick="showChangePasswordModal()" class="flex-1 py-3 border-2 border-emerald-700 text-emerald-700 rounded-xl font-bold hover:bg-emerald-50 transition-all">Change Password</button></div></div></div>
      </section>
     </main>
    </div>
+
    <!-- Modals -->
    <div id="modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
     <div id="modal-content" class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"></div>
@@ -1018,4 +685,3 @@
 <script src="dataset_integration.js" defer></script>
 </body>
 </html>
-
