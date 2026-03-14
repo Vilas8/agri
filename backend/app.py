@@ -2,7 +2,6 @@ import sys
 import os
 
 # Add the project root (parent of backend) to sys.path so we can import config, models, etc.
-# Get the absolute path of the project root
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -18,20 +17,28 @@ from datetime import datetime, date, timedelta
 import jwt
 import json
 
+# ── NEW: import validators and sync-profile blueprint ─────────────────────
+from validators import validate_email, validate_password, validate_phone
+from sync_profile_route import sync_bp
+# ──────────────────────────────────────────────────────────────────────────
+
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
 
 # Configure static folder and template folder to point to frontend
-import os
 app_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(app_dir, '..'))
 frontend_dir = os.path.join(project_root, 'frontend')
-app.static_folder = frontend_dir  # CSS, JS, and HTML files are in frontend
+app.static_folder = frontend_dir
 app.template_folder = frontend_dir
 
 # Enable CORS
 CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+
+# ── Register blueprints ────────────────────────────────────────────────────
+app.register_blueprint(sync_bp)   # provides POST /api/auth/sync-profile
+# ──────────────────────────────────────────────────────────────────────────
 
 # Initialize database
 db.init_app(app)
@@ -67,7 +74,6 @@ def init_database():
     from config import Config
     
     if Config.MYSQL_AVAILABLE:
-        # MySQL initialization
         try:
             connection = pymysql.connect(
                 host=Config.MYSQL_HOST,
@@ -85,19 +91,16 @@ def init_database():
             print("Error: MySQL is required but not available. Please ensure MySQL is running.")
             return
     else:
-        # SQLite - just ensure the instance directory exists
         import os
         instance_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
         if not os.path.exists(instance_dir):
             os.makedirs(instance_dir)
         print(f"SQLite database will be created at: {instance_dir}/agripredict.db")
     
-    # Create tables
     with app.app_context():
         db.create_all()
         print("Database tables created successfully")
         
-        # Seed initial admin user if not exists - FAST CHECK
         admin = User.query.filter_by(email=Config.ADMIN_EMAIL).first()
         if not admin:
             admin = User(
@@ -112,14 +115,10 @@ def init_database():
             db.session.commit()
             print("Admin user created successfully")
         
-        # SKIP commodity price seeding entirely - we use prediction_service for prices
-        # This was causing slow startup times
         print("Using prediction_service for prices - skipping database seeding")
 
 def seed_commodity_prices():
     """Seed commodity prices from historical data - optimized to skip if already seeded"""
-    
-    # Check if prices already exist - skip seeding if database has data
     existing_count = CommodityPrice.query.count()
     if existing_count > 0:
         print(f"Commodity prices already exist ({existing_count} records). Skipping seeding.")
@@ -193,7 +192,6 @@ def seed_commodity_prices():
     commodities = ['Maize', 'Paddy', 'Wheat', 'Sugarcane']
     districts = ['Kolar', 'Chikkabalpura', 'Bangalore Rural']
     
-    # Simplified market structure for faster seeding (fewer markets)
     markets = {
         'Kolar': {
             'Kolar': ['Kolar Main Market'],
@@ -211,22 +209,17 @@ def seed_commodity_prices():
         }
     }
     
-    # Flatten markets for seeding
     markets_list = []
     for district, taluks in markets.items():
         for taluk, market_list in taluks.items():
             for market in market_list:
                 markets_list.append({'district': district, 'market': market})
     
-    # Batch insert for better performance
     prices_to_add = []
     for record in historical_data:
         record_date = datetime.strptime(record['Date'], '%Y-%m-%d').date()
-        
         for commodity in commodities:
             base_price = record.get(commodity, 2000)
-            
-            # Add variations for each district/market (using nested structure)
             for district, taluks in markets.items():
                 for taluk, market_list in taluks.items():
                     for market in market_list:
@@ -239,7 +232,6 @@ def seed_commodity_prices():
                         )
                         prices_to_add.append(price)
     
-    # Bulk insert for better performance
     db.session.bulk_save_objects(prices_to_add)
     db.session.commit()
     print(f"Successfully seeded {len(prices_to_add)} commodity price records")
@@ -251,84 +243,88 @@ def seed_commodity_prices():
 
 @app.route('/api/auth/register', methods=['POST'])
 def register():
-    """Register a new user"""
-    data = request.get_json()
-    
-    # Validate required fields
-    required_fields = ['username', 'email', 'phone', 'password']
-    for field in required_fields:
-        if not data.get(field):
-            return jsonify({'success': False, 'message': f'{field} is required'}), 400
-    
-    # Check if email already exists
-    existing_user = User.query.filter_by(email=data['email']).first()
-    if existing_user:
-        return jsonify({'success': False, 'message': 'Email already registered'}), 400
-    
-    # Validate phone number
-    phone = data['phone'].replace('-', '').replace(' ', '')
-    if len(phone) != 10 or not phone.isdigit():
-        return jsonify({'success': False, 'message': 'Phone number must be 10 digits'}), 400
-    
-    # Create new user
+    """Register a new user with full server-side validation."""
+    data = request.get_json() or {}
+
+    name     = (data.get('name') or data.get('username') or '').strip()
+    email    = (data.get('email')    or '').strip()
+    phone    = (data.get('phone')    or '').strip()
+    password =  data.get('password') or ''
+
+    if not name:
+        return jsonify(success=False, message='Full name is required.'), 400
+
+    # Strict email validation (validators.py)
+    email_ok, email_msg = validate_email(email)
+    if not email_ok:
+        return jsonify(success=False, message=email_msg), 400
+
+    # Phone validation
+    phone_ok, phone_result = validate_phone(phone)
+    if not phone_ok:
+        return jsonify(success=False, message=phone_result), 400
+    phone = phone_result  # cleaned 10-digit string
+
+    # Password strength validation
+    pw_ok, pw_msg = validate_password(password)
+    if not pw_ok:
+        return jsonify(success=False, message=pw_msg), 400
+
+    # Duplicate email check
+    if User.query.filter_by(email=email.lower()).first():
+        return jsonify(success=False, message='Email is already registered.'), 400
+
     new_user = User(
-        username=data['username'],
-        email=data['email'],
+        username=name,
+        email=email.lower(),
         phone=phone,
-        password=data['password'],
+        password=password,
         role='user',
         status='active'
     )
-    
     try:
         db.session.add(new_user)
         db.session.commit()
-        
-        # Log activity
-        log_activity(new_user.id, new_user.username, 'register', f'User {new_user.email} registered')
-        
-        return jsonify({
-            'success': True,
-            'message': 'Registration successful! Please login.',
-            'user': new_user.to_dict()
-        }), 201
+        log_activity(new_user.id, new_user.username, 'register',
+                     f'User {new_user.email} registered')
+        return jsonify(
+            success=True,
+            message='Registration successful! Please log in.',
+            user=new_user.to_dict()
+        ), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        return jsonify(success=False, message=str(e)), 500
 
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
-    """User login"""
-    data = request.get_json()
-    
-    email = data.get('email')
-    password = data.get('password')
-    
-    if not email or not password:
-        return jsonify({'success': False, 'message': 'Email and password are required'}), 400
-    
-    # Find user by email
-    user = User.query.filter_by(email=email).first()
-    
+    """User login with server-side email validation."""
+    data = request.get_json() or {}
+
+    email    = (data.get('email')    or '').strip()
+    password =  data.get('password') or ''
+
+    email_ok, email_msg = validate_email(email)
+    if not email_ok:
+        return jsonify(success=False, message=email_msg), 400
+    if not password:
+        return jsonify(success=False, message='Password is required.'), 400
+
+    user = User.query.filter_by(email=email.lower()).first()
     if not user or user.password != password:
-        return jsonify({'success': False, 'message': 'Invalid email or password'}), 401
-    
+        return jsonify(success=False, message='Invalid email or password.'), 401
     if user.status != 'active':
-        return jsonify({'success': False, 'message': 'Account is inactive'}), 403
-    
-    # Create token
+        return jsonify(success=False, message='Account is inactive.'), 403
+
     token = create_token(user.id, user.email, user.role)
-    
-    # Log activity
     log_activity(user.id, user.username, 'login', f'User {user.email} logged in')
-    
-    return jsonify({
-        'success': True,
-        'message': 'Login successful',
-        'token': token,
-        'user': user.to_dict()
-    }), 200
+    return jsonify(
+        success=True,
+        message='Login successful',
+        token=token,
+        user=user.to_dict()
+    ), 200
 
 
 @app.route('/api/auth/admin-login', methods=['POST'])
@@ -343,9 +339,7 @@ def admin_login():
     if not all([email, password, secret]):
         return jsonify({'success': False, 'message': 'Email, password, and secret key are required'}), 400
     
-    # Validate admin credentials
     if email != Config.ADMIN_EMAIL or password != Config.ADMIN_PASSWORD:
-        # Check if it's a registered admin user
         user = User.query.filter_by(email=email, role='admin').first()
         if not user or user.password != password:
             return jsonify({'success': False, 'message': 'Invalid admin credentials'}), 401
@@ -353,7 +347,6 @@ def admin_login():
     if secret != Config.ADMIN_SECRET:
         return jsonify({'success': False, 'message': 'Invalid secret key'}), 401
     
-    # Get or create admin user
     user = User.query.filter_by(email=email).first()
     if not user:
         user = User(
@@ -367,10 +360,7 @@ def admin_login():
         db.session.add(user)
         db.session.commit()
     
-    # Create token
     token = create_token(user.id, user.email, user.role)
-    
-    # Log activity
     log_activity(user.id, user.username, 'admin_login', f'Admin {user.email} logged in')
     
     return jsonify({
@@ -399,16 +389,8 @@ def logout():
 # Price Routes
 # ============================================
 
-# ============================================
-# REAL-TIME PRICE API ENDPOINTS (NEW)
-# ============================================
-
 @app.route('/api/prices/live', methods=['GET'])
 def get_live_price_endpoint():
-    """
-    Get real-time live price for a commodity
-    This endpoint tries to fetch from external APIs first, then falls back to simulation
-    """
     commodity = request.args.get('commodity')
     district = request.args.get('district', 'Kolar')
     market = request.args.get('market', 'Main Market')
@@ -418,13 +400,9 @@ def get_live_price_endpoint():
         return jsonify({'success': False, 'message': 'Commodity is required'}), 400
     
     try:
-        # Clear cache if refresh is requested
         if refresh:
             refresh_cache()
-        
-        # Get live price from API service
         price_data = get_live_price(commodity, district, market)
-        
         return jsonify({
             'success': True,
             'commodity': commodity,
@@ -442,21 +420,14 @@ def get_live_price_endpoint():
 
 @app.route('/api/prices/live/all', methods=['GET'])
 def get_all_live_prices_endpoint():
-    """
-    Get real-time prices for all commodities
-    """
     district = request.args.get('district', 'Kolar')
     market = request.args.get('market', 'Main Market')
     refresh = request.args.get('refresh', 'false').lower() == 'true'
     
     try:
-        # Clear cache if refresh is requested
         if refresh:
             refresh_cache()
-        
-        # Get all live prices
         prices = get_all_live_prices(district, market)
-        
         formatted_prices = {}
         for commodity, data in prices.items():
             formatted_prices[commodity] = {
@@ -466,7 +437,6 @@ def get_all_live_prices_endpoint():
                 'last_updated': data.get('last_updated'),
                 'source': data.get('source', 'unknown')
             }
-        
         return jsonify({
             'success': True,
             'district': district,
@@ -480,9 +450,6 @@ def get_all_live_prices_endpoint():
 
 @app.route('/api/prices/market/compare', methods=['GET'])
 def compare_market_prices():
-    """
-    Compare prices across different markets for a commodity
-    """
     commodity = request.args.get('commodity')
     district = request.args.get('district', 'Kolar')
     
@@ -490,9 +457,7 @@ def compare_market_prices():
         return jsonify({'success': False, 'message': 'Commodity is required'}), 400
     
     try:
-        # Get market data from API service
         market_data = api_service.get_market_data(commodity, district)
-        
         return jsonify({
             'success': True,
             'commodity': commodity,
@@ -505,27 +470,21 @@ def compare_market_prices():
 
 @app.route('/api/prices/cache/clear', methods=['POST'])
 def clear_price_cache():
-    """Clear the price cache to force fresh API calls"""
     try:
         refresh_cache()
-        return jsonify({
-            'success': True,
-            'message': 'Price cache cleared successfully'
-        }), 200
+        return jsonify({'success': True, 'message': 'Price cache cleared successfully'}), 200
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @app.route('/api/prices/current', methods=['GET'])
 def get_current_prices():
-    """Get current prices for all commodities"""
     commodity = request.args.get('commodity')
     district = request.args.get('district', 'Kolar')
     market = request.args.get('market', 'Main Market')
     
     try:
         if commodity:
-            # Get price for specific commodity
             price = prediction_service.get_current_price(commodity, district, market)
             return jsonify({
                 'success': True,
@@ -535,12 +494,10 @@ def get_current_prices():
                 'market': market
             }), 200
         else:
-            # Get all current prices
             commodities = ['Maize', 'Paddy', 'Wheat', 'Sugarcane']
             prices = {}
             for com in commodities:
                 prices[com] = prediction_service.get_current_price(com, district, market)
-            
             return jsonify({
                 'success': True,
                 'prices': prices,
@@ -553,7 +510,6 @@ def get_current_prices():
 
 @app.route('/api/prices/historical', methods=['GET'])
 def get_historical_prices():
-    """Get historical prices"""
     commodity = request.args.get('commodity')
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
@@ -561,20 +517,15 @@ def get_historical_prices():
     
     try:
         query = CommodityPrice.query
-        
         if commodity:
             query = query.filter_by(commodity=commodity)
-        
         if start_date:
             start = datetime.strptime(start_date, '%Y-%m-%d').date()
             query = query.filter(CommodityPrice.date >= start)
-        
         if end_date:
             end = datetime.strptime(end_date, '%Y-%m-%d').date()
             query = query.filter(CommodityPrice.date <= end)
-        
         prices = query.order_by(CommodityPrice.date.desc()).limit(limit).all()
-        
         return jsonify({
             'success': True,
             'prices': [p.to_dict() for p in prices],
@@ -586,7 +537,6 @@ def get_historical_prices():
 
 @app.route('/api/prices/search', methods=['GET'])
 def search_prices():
-    """Search prices by commodity, district, and market"""
     commodity = request.args.get('commodity')
     district = request.args.get('district', 'Kolar')
     market = request.args.get('market', 'Main Market')
@@ -596,10 +546,8 @@ def search_prices():
         return jsonify({'success': False, 'message': 'Commodity is required'}), 400
     
     try:
-        # Get current price
         current_price = prediction_service.get_current_price(commodity, district, market)
         total_value = current_price * quantity
-        
         return jsonify({
             'success': True,
             'commodity': commodity,
@@ -620,9 +568,7 @@ def search_prices():
 
 @app.route('/api/predictions/predict', methods=['POST'])
 def predict_price():
-    """Predict future commodity prices"""
     data = request.get_json()
-    
     commodity = data.get('commodity')
     district = data.get('district', 'Kolar')
     market = data.get('market', 'Main Market')
@@ -634,20 +580,13 @@ def predict_price():
         return jsonify({'success': False, 'message': 'Commodity is required'}), 400
     
     try:
-        # Get prediction
         result = prediction_service.predict_price(commodity, district, market, days_ahead)
-        
         current_price = result['current_price']
         predicted_price = result['predicted_price']
-        
-        # Calculate totals
         current_total = current_price * quantity
         predicted_total = predicted_price * quantity
-        
-        # Calculate percentage change
         price_change = ((predicted_price - current_price) / current_price) * 100
         
-        # Save prediction to database
         if user_id:
             prediction = Prediction(
                 user_id=user_id,
@@ -661,8 +600,6 @@ def predict_price():
             )
             db.session.add(prediction)
             db.session.commit()
-            
-            # Log activity
             log_activity(user_id, None, 'prediction', f'Predicted {commodity} prices')
         
         return jsonify({
@@ -687,17 +624,10 @@ def predict_price():
 
 @app.route('/api/predictions/trend', methods=['GET'])
 def get_price_trend():
-    """Get price trend information"""
     commodity = request.args.get('commodity', 'Maize')
-    
     try:
         trend = prediction_service.get_price_trend(commodity)
-        
-        return jsonify({
-            'success': True,
-            'commodity': commodity,
-            'trend': trend
-        }), 200
+        return jsonify({'success': True, 'commodity': commodity, 'trend': trend}), 200
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -708,24 +638,20 @@ def get_price_trend():
 
 @app.route('/api/admin/users', methods=['GET'])
 def get_users():
-    """Get all users"""
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     search = request.args.get('search', '')
     
     try:
         query = User.query
-        
         if search:
             query = query.filter(
                 (User.username.ilike(f'%{search}%')) |
                 (User.email.ilike(f'%{search}%'))
             )
-        
         pagination = query.order_by(User.created_at.desc()).paginate(
             page=page, per_page=per_page, error_out=False
         )
-        
         return jsonify({
             'success': True,
             'users': [u.to_dict() for u in pagination.items],
@@ -740,13 +666,10 @@ def get_users():
 
 @app.route('/api/admin/users/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
-    """Update user details"""
     data = request.get_json()
-    
     user = User.query.get(user_id)
     if not user:
         return jsonify({'success': False, 'message': 'User not found'}), 404
-    
     try:
         if 'username' in data:
             user.username = data['username']
@@ -754,14 +677,8 @@ def update_user(user_id):
             user.status = data['status']
         if 'role' in data:
             user.role = data['role']
-        
         db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'User updated successfully',
-            'user': user.to_dict()
-        }), 200
+        return jsonify({'success': True, 'message': 'User updated successfully', 'user': user.to_dict()}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -769,20 +686,14 @@ def update_user(user_id):
 
 @app.route('/api/admin/stats', methods=['GET'])
 def get_stats():
-    """Get admin dashboard statistics"""
     try:
         total_users = User.query.count()
         active_users = User.query.filter_by(status='active').count()
         admin_users = User.query.filter_by(role='admin').count()
-        
         today = date.today()
-        today_users = User.query.filter(
-            db.func.date(User.created_at) == today
-        ).count()
-        
+        today_users = User.query.filter(db.func.date(User.created_at) == today).count()
         total_activities = Activity.query.count()
         total_predictions = Prediction.query.count()
-        
         return jsonify({
             'success': True,
             'stats': {
@@ -805,18 +716,13 @@ def get_stats():
 
 @app.route('/api/activities', methods=['GET'])
 def get_activities():
-    """Get activities"""
     limit = request.args.get('limit', 50, type=int)
     activity_type = request.args.get('type')
-    
     try:
         query = Activity.query
-        
         if activity_type:
             query = query.filter_by(activity_type=activity_type)
-        
         activities = query.order_by(Activity.created_at.desc()).limit(limit).all()
-        
         return jsonify({
             'success': True,
             'activities': [a.to_dict() for a in activities],
@@ -848,30 +754,21 @@ def log_activity(user_id, username, activity_type, description):
 
 @app.route('/api/markets', methods=['GET'])
 def get_markets():
-    """Get available markets"""
     districts = request.args.get('districts', 'true').lower() == 'true'
-    
-    # Try to load from database first, fallback to default
     try:
-        # Get unique markets from CommodityPrice table
         db_markets = db.session.query(
             CommodityPrice.district,
             CommodityPrice.market,
             db.func.count(CommodityPrice.id).label('record_count')
-        ).group_by(
-            CommodityPrice.district,
-            CommodityPrice.market
-        ).all()
+        ).group_by(CommodityPrice.district, CommodityPrice.market).all()
         
         if db_markets and len(db_markets) > 0:
-            # Convert to nested structure
             markets_data = {}
             for row in db_markets:
                 district = row.district
                 market = row.market
                 if district not in markets_data:
                     markets_data[district] = {}
-                # Extract taluk from market name
                 taluk = market.split()[0] if market else 'Main'
                 if taluk not in markets_data[district]:
                     markets_data[district][taluk] = []
@@ -879,61 +776,26 @@ def get_markets():
                     markets_data[district][taluk].append(market)
         else:
             markets_data = {
-                'Kolar': {
-                    'Kolar': ['Kolar Main Market', 'Kolar APMC', 'Kolar Wholesale'],
-                    'Bangarapet': ['Bangarapet Market', 'Bangarapet APMC'],
-                    'Malur': ['Malur Main Market', 'Malur APMC'],
-                    'Mulbagal': ['Mulbagal Market', 'Mulbagal APMC']
-                },
-                'Chikkabalpura': {
-                    'Chikkabalpura': ['Chikkabalpura Main', 'Chikkabalpura APMC'],
-                    'Bagepalli': ['Bagepalli Market', 'Bagepalli APMC'],
-                    'Cheemtagi': ['Cheemtagi Market']
-                },
-                'Bangalore Rural': {
-                    'Bangalore Rural': ['Bangalore Rural Main', 'Bangalore Rural APMC'],
-                    'Devanahalli': ['Devanahalli Market', 'Devanahalli APMC'],
-                    'Doddaballapur': ['Doddaballapur Market', 'Doddaballapur APMC'],
-                    'Hoskote': ['Hoskote Main', 'Hoskote APMC']
-                }
+                'Kolar': {'Kolar': ['Kolar Main Market', 'Kolar APMC', 'Kolar Wholesale'], 'Bangarapet': ['Bangarapet Market', 'Bangarapet APMC'], 'Malur': ['Malur Main Market', 'Malur APMC'], 'Mulbagal': ['Mulbagal Market', 'Mulbagal APMC']},
+                'Chikkabalpura': {'Chikkabalpura': ['Chikkabalpura Main', 'Chikkabalpura APMC'], 'Bagepalli': ['Bagepalli Market', 'Bagepalli APMC'], 'Cheemtagi': ['Cheemtagi Market']},
+                'Bangalore Rural': {'Bangalore Rural': ['Bangalore Rural Main', 'Bangalore Rural APMC'], 'Devanahalli': ['Devanahalli Market', 'Devanahalli APMC'], 'Doddaballapur': ['Doddaballapur Market', 'Doddaballapur APMC'], 'Hoskote': ['Hoskote Main', 'Hoskote APMC']}
             }
     except Exception as e:
         print(f"Error loading markets from DB: {e}")
         markets_data = {
-            'Kolar': {
-                'Kolar': ['Kolar Main Market', 'Kolar APMC', 'Kolar Wholesale'],
-                'Bangarapet': ['Bangarapet Market', 'Bangarapet APMC'],
-                'Malur': ['Malur Main Market', 'Malur APMC'],
-                'Mulbagal': ['Mulbagal Market', 'Mulbagal APMC']
-            },
-            'Chikkabalpura': {
-                'Chikkabalpura': ['Chikkabalpura Main', 'Chikkabalpura APMC'],
-                'Bagepalli': ['Bagepalli Market', 'Bagepalli APMC'],
-                'Cheemtagi': ['Cheemtagi Market']
-            },
-            'Bangalore Rural': {
-                'Bangalore Rural': ['Bangalore Rural Main', 'Bangalore Rural APMC'],
-                'Devanahalli': ['Devanahalli Market', 'Devanahalli APMC'],
-                'Doddaballapur': ['Doddaballapur Market', 'Doddaballapur APMC'],
-                'Hoskote': ['Hoskote Main', 'Hoskote APMC']
-            }
+            'Kolar': {'Kolar': ['Kolar Main Market', 'Kolar APMC', 'Kolar Wholesale'], 'Bangarapet': ['Bangarapet Market', 'Bangarapet APMC'], 'Malur': ['Malur Main Market', 'Malur APMC'], 'Mulbagal': ['Mulbagal Market', 'Mulbagal APMC']},
+            'Chikkabalpura': {'Chikkabalpura': ['Chikkabalpura Main', 'Chikkabalpura APMC'], 'Bagepalli': ['Bagepalli Market', 'Bagepalli APMC'], 'Cheemtagi': ['Cheemtagi Market']},
+            'Bangalore Rural': {'Bangalore Rural': ['Bangalore Rural Main', 'Bangalore Rural APMC'], 'Devanahalli': ['Devanahalli Market', 'Devanahalli APMC'], 'Doddaballapur': ['Doddaballapur Market', 'Doddaballapur APMC'], 'Hoskote': ['Hoskote Main', 'Hoskote APMC']}
         }
     
     if not districts:
-        # Return flat list of all markets
         all_markets = []
         for district, taluks in markets_data.items():
             for taluk, markets in taluks.items():
                 all_markets.extend(markets)
-        return jsonify({
-            'success': True,
-            'markets': all_markets
-        }), 200
+        return jsonify({'success': True, 'markets': all_markets}), 200
     
-    return jsonify({
-        'success': True,
-        'markets': markets_data
-    }), 200
+    return jsonify({'success': True, 'markets': markets_data}), 200
 
 
 # ============================================
@@ -942,256 +804,109 @@ def get_markets():
 
 @app.route('/api/admin/markets', methods=['GET'])
 def get_admin_markets():
-    """Get all markets for admin management"""
-    
-    # Static fallback markets data (same structure as frontend marketsByDistrict)
     static_markets = {
-        'Kolar': {
-            'Kolar': ['Kolar Main Market', 'Kolar APMC', 'Kolar Wholesale'],
-            'Bangarapet': ['Bangarapet Market', 'Bangarapet APMC', 'Bangarapet Wholesale'],
-            'Malur': ['Malur Main Market', 'Malur APMC', 'Malur Wholesale'],
-            'Mulbagal': ['Mulbagal Market', 'Mulbagal APMC', 'Mulbagal Wholesale'],
-            'Srinivaspur': ['Srinivaspur Market', 'Srinivaspur APMC']
-        },
-        'Chikkabalpura': {
-            'Chikkabalpura': ['Chikkabalpura Main', 'Chikkabalpura APMC', 'Chikkabalpura Wholesale'],
-            'Bagepalli': ['Bagepalli Market', 'Bagepalli APMC'],
-            'Cheemtagi': ['Cheemtagi Market', 'Cheemtagi APMC'],
-            'Gudibanda': ['Gudibanda Market', 'Gudibanda APMC'],
-            'Shravanabelagola': ['Shravanabelagola Market', 'Shravanabelagola APMC']
-        },
-        'Bangalore Rural': {
-            'Bangalore Rural': ['Bangalore Rural Main', 'Bangalore Rural APMC', 'Bangalore Rural Wholesale'],
-            'Devanahalli': ['Devanahalli Market', 'Devanahalli APMC', 'Devanahalli Wholesale'],
-            'Doddaballapur': ['Doddaballapur Market', 'Doddaballapur APMC', 'Doddaballapur Wholesale'],
-            'Hoskote': ['Hoskote Main', 'Hoskote APMC', 'Hoskote Wholesale'],
-            'Nelamangala': ['Nelamangala Market', 'Nelamangala APMC']
-        }
+        'Kolar': {'Kolar': ['Kolar Main Market', 'Kolar APMC', 'Kolar Wholesale'], 'Bangarapet': ['Bangarapet Market', 'Bangarapet APMC', 'Bangarapet Wholesale'], 'Malur': ['Malur Main Market', 'Malur APMC', 'Malur Wholesale'], 'Mulbagal': ['Mulbagal Market', 'Mulbagal APMC', 'Mulbagal Wholesale'], 'Srinivaspur': ['Srinivaspur Market', 'Srinivaspur APMC']},
+        'Chikkabalpura': {'Chikkabalpura': ['Chikkabalpura Main', 'Chikkabalpura APMC', 'Chikkabalpura Wholesale'], 'Bagepalli': ['Bagepalli Market', 'Bagepalli APMC'], 'Cheemtagi': ['Cheemtagi Market', 'Cheemtagi APMC'], 'Gudibanda': ['Gudibanda Market', 'Gudibanda APMC'], 'Shravanabelagola': ['Shravanabelagola Market', 'Shravanabelagola APMC']},
+        'Bangalore Rural': {'Bangalore Rural': ['Bangalore Rural Main', 'Bangalore Rural APMC', 'Bangalore Rural Wholesale'], 'Devanahalli': ['Devanahalli Market', 'Devanahalli APMC', 'Devanahalli Wholesale'], 'Doddaballapur': ['Doddaballapur Market', 'Doddaballapur APMC', 'Doddaballapur Wholesale'], 'Hoskote': ['Hoskote Main', 'Hoskote APMC', 'Hoskote Wholesale'], 'Nelamangala': ['Nelamangala Market', 'Nelamangala APMC']}
     }
-    
     try:
-        # Get all unique market entries from database
         db_markets = db.session.query(
             CommodityPrice.district,
             CommodityPrice.market,
             db.func.count(CommodityPrice.id).label('record_count'),
             db.func.max(CommodityPrice.date).label('last_updated'),
             db.func.avg(CommodityPrice.price).label('avg_price')
-        ).group_by(
-            CommodityPrice.district,
-            CommodityPrice.market
-        ).all()
+        ).group_by(CommodityPrice.district, CommodityPrice.market).all()
         
         markets_list = []
-        
-        # If database has markets, use them
         if db_markets and len(db_markets) > 0:
             for i, row in enumerate(db_markets):
-                markets_list.append({
-                    'id': i + 1,
-                    'district': row.district,
-                    'market': row.market,
-                    'record_count': row.record_count,
-                    'last_updated': row.last_updated.isoformat() if row.last_updated else None,
-                    'avg_price': float(row.avg_price) if row.avg_price else 0
-                })
+                markets_list.append({'id': i + 1, 'district': row.district, 'market': row.market, 'record_count': row.record_count, 'last_updated': row.last_updated.isoformat() if row.last_updated else None, 'avg_price': float(row.avg_price) if row.avg_price else 0})
         
-        # If database has fewer markets than expected (less than 30), use static fallback
         if len(markets_list) < 30:
-            # Use static markets as fallback
             static_id = len(markets_list) + 1
             for district, taluks in static_markets.items():
                 for taluk, market_list in taluks.items():
                     for market in market_list:
-                        # Check if this market already exists in db_markets
                         existing = False
                         if db_markets:
                             for row in db_markets:
                                 if row.district == district and row.market == market:
                                     existing = True
                                     break
-                        
                         if not existing:
-                            markets_list.append({
-                                'id': static_id,
-                                'district': district,
-                                'market': market,
-                                'record_count': 0,
-                                'last_updated': None,
-                                'avg_price': 0,
-                                'is_static': True  # Flag to indicate this is from static data
-                            })
+                            markets_list.append({'id': static_id, 'district': district, 'market': market, 'record_count': 0, 'last_updated': None, 'avg_price': 0, 'is_static': True})
                             static_id += 1
         
-        return jsonify({
-            'success': True,
-            'markets': markets_list,
-            'total': len(markets_list)
-        }), 200
+        return jsonify({'success': True, 'markets': markets_list, 'total': len(markets_list)}), 200
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @app.route('/api/admin/markets', methods=['POST'])
 def add_market():
-    """Add a new market"""
     data = request.get_json()
-    
     district = data.get('district')
     market = data.get('market')
     commodity = data.get('commodity', 'Maize')
     price = data.get('price', 2000)
     
     if not district or not market:
-        return jsonify({
-            'success': False,
-            'message': 'District and Market are required'
-        }), 400
+        return jsonify({'success': False, 'message': 'District and Market are required'}), 400
     
     try:
-        # Check if market already exists
-        existing = CommodityPrice.query.filter_by(
-            district=district,
-            market=market
-        ).first()
-        
+        existing = CommodityPrice.query.filter_by(district=district, market=market).first()
         if existing:
-            return jsonify({
-                'success': False,
-                'message': 'Market already exists in this district'
-            }), 400
-        
-        # Add a sample price record for the new market
-        new_price = CommodityPrice(
-            date=date.today(),
-            commodity=commodity,
-            price=price,
-            district=district,
-            market=market
-        )
+            return jsonify({'success': False, 'message': 'Market already exists in this district'}), 400
+        new_price = CommodityPrice(date=date.today(), commodity=commodity, price=price, district=district, market=market)
         db.session.add(new_price)
         db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Market added successfully',
-            'market': {
-                'district': district,
-                'market': market,
-                'commodity': commodity,
-                'price': price
-            }
-        }), 201
+        return jsonify({'success': True, 'message': 'Market added successfully', 'market': {'district': district, 'market': market, 'commodity': commodity, 'price': price}}), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @app.route('/api/admin/markets/<path:market_id>', methods=['PUT'])
 def update_market(market_id):
-    """Update an existing market"""
     data = request.get_json()
-    
     district = data.get('district')
     new_market = data.get('market')
     new_district = data.get('new_district')
     
     if not district or not new_market:
-        return jsonify({
-            'success': False,
-            'message': 'District and Market are required'
-        }), 400
+        return jsonify({'success': False, 'message': 'District and Market are required'}), 400
     
     try:
-        # Parse market_id to get index
         market_idx = int(market_id) - 1
-        
-        # Get all markets grouped
-        db_markets = db.session.query(
-            CommodityPrice.district,
-            CommodityPrice.market
-        ).distinct().all()
-        
+        db_markets = db.session.query(CommodityPrice.district, CommodityPrice.market).distinct().all()
         if market_idx < 0 or market_idx >= len(db_markets):
-            return jsonify({
-                'success': False,
-                'message': 'Market not found'
-            }), 404
-        
+            return jsonify({'success': False, 'message': 'Market not found'}), 404
         old_district = db_markets[market_idx].district
         old_market = db_markets[market_idx].market
-        
-        # Update all price records for this market
-        updated_count = CommodityPrice.query.filter_by(
-            district=old_district,
-            market=old_market
-        ).update({
-            'district': new_district if new_district else district,
-            'market': new_market
-        })
-        
+        updated_count = CommodityPrice.query.filter_by(district=old_district, market=old_market).update({'district': new_district if new_district else district, 'market': new_market})
         db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': f'Market updated successfully ({updated_count} records updated)',
-            'updated': updated_count
-        }), 200
+        return jsonify({'success': True, 'message': f'Market updated successfully ({updated_count} records updated)', 'updated': updated_count}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @app.route('/api/admin/markets/<path:market_id>', methods=['DELETE'])
 def delete_market(market_id):
-    """Delete a market and its price records"""
     try:
-        # Parse market_id to get index
         market_idx = int(market_id) - 1
-        
-        # Get all markets grouped
-        db_markets = db.session.query(
-            CommodityPrice.district,
-            CommodityPrice.market
-        ).distinct().all()
-        
+        db_markets = db.session.query(CommodityPrice.district, CommodityPrice.market).distinct().all()
         if market_idx < 0 or market_idx >= len(db_markets):
-            return jsonify({
-                'success': False,
-                'message': 'Market not found'
-            }), 404
-        
+            return jsonify({'success': False, 'message': 'Market not found'}), 404
         district = db_markets[market_idx].district
         market = db_markets[market_idx].market
-        
-        # Delete all price records for this market
-        deleted_count = CommodityPrice.query.filter_by(
-            district=district,
-            market=market
-        ).delete()
-        
+        deleted_count = CommodityPrice.query.filter_by(district=district, market=market).delete()
         db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': f'Market deleted successfully ({deleted_count} records deleted)',
-            'deleted': deleted_count
-        }), 200
+        return jsonify({'success': True, 'message': f'Market deleted successfully ({deleted_count} records deleted)', 'deleted': deleted_count}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 # ============================================
@@ -1200,129 +915,73 @@ def delete_market(market_id):
 
 @app.route('/api/admin/price-records', methods=['GET'])
 def get_price_records():
-    """Get price records for admin management"""
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     district = request.args.get('district')
     commodity = request.args.get('commodity')
-    
     try:
         query = CommodityPrice.query
-        
         if district:
             query = query.filter_by(district=district)
         if commodity:
             query = query.filter_by(commodity=commodity)
-        
-        pagination = query.order_by(CommodityPrice.date.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
-        
-        return jsonify({
-            'success': True,
-            'records': [r.to_dict() for r in pagination.items],
-            'total': pagination.total,
-            'page': page,
-            'per_page': per_page,
-            'pages': pagination.pages
-        }), 200
+        pagination = query.order_by(CommodityPrice.date.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        return jsonify({'success': True, 'records': [r.to_dict() for r in pagination.items], 'total': pagination.total, 'page': page, 'per_page': per_page, 'pages': pagination.pages}), 200
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @app.route('/api/admin/price-records/<int:record_id>', methods=['PUT'])
 def update_price_record(record_id):
-    """Update a price record"""
     data = request.get_json()
-    
     record = CommodityPrice.query.get(record_id)
     if not record:
-        return jsonify({
-            'success': False,
-            'message': 'Record not found'
-        }), 404
-    
+        return jsonify({'success': False, 'message': 'Record not found'}), 404
     try:
-        if 'price' in data:
-            record.price = data['price']
-        if 'commodity' in data:
-            record.commodity = data['commodity']
-        if 'district' in data:
-            record.district = data['district']
-        if 'market' in data:
-            record.market = data['market']
-        if 'date' in data:
-            record.date = datetime.strptime(data['date'], '%Y-%m-%d').date()
-        
+        if 'price' in data: record.price = data['price']
+        if 'commodity' in data: record.commodity = data['commodity']
+        if 'district' in data: record.district = data['district']
+        if 'market' in data: record.market = data['market']
+        if 'date' in data: record.date = datetime.strptime(data['date'], '%Y-%m-%d').date()
         db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Record updated successfully',
-            'record': record.to_dict()
-        }), 200
+        return jsonify({'success': True, 'message': 'Record updated successfully', 'record': record.to_dict()}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @app.route('/api/admin/price-records/<int:record_id>', methods=['DELETE'])
 def delete_price_record(record_id):
-    """Delete a price record"""
     record = CommodityPrice.query.get(record_id)
     if not record:
-        return jsonify({
-            'success': False,
-            'message': 'Record not found'
-        }), 404
-    
+        return jsonify({'success': False, 'message': 'Record not found'}), 404
     try:
         db.session.delete(record)
         db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Record deleted successfully'
-        }), 200
+        return jsonify({'success': True, 'message': 'Record deleted successfully'}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @app.route('/api/commodities', methods=['GET'])
 def get_commodities():
-    """Get available commodities"""
     commodities = [
         {'name': 'Maize', 'icon': '🌽', 'base_price': 2075},
         {'name': 'Paddy', 'icon': '🌾', 'base_price': 2275},
         {'name': 'Wheat', 'icon': '🌿', 'base_price': 2580},
         {'name': 'Sugarcane', 'icon': '🎋', 'base_price': 3300}
     ]
-    
-    return jsonify({
-        'success': True,
-        'commodities': commodities
-    }), 200
+    return jsonify({'success': True, 'commodities': commodities}), 200
 
 
 # ============================================
-# Remarks Routes - For User Market Search
+# Remarks Routes
 # ============================================
 
 @app.route('/api/remarks', methods=['POST'])
 def submit_remark():
-    """Submit a remark or complaint from user market search"""
     data = request.get_json()
-    
     user_id = data.get('user_id')
     username = data.get('username')
     commodity = data.get('commodity')
@@ -1330,34 +989,17 @@ def submit_remark():
     market = data.get('market')
     quantity = data.get('quantity', 1)
     remark = data.get('remark')
-    complaint_type = data.get('complaint_type', 'remark')  # 'remark' or 'complaint'
+    complaint_type = data.get('complaint_type', 'remark')
     
     if not commodity or not remark:
         return jsonify({'success': False, 'message': 'Commodity and remark are required'}), 400
     
     try:
-        new_remark = Remark(
-            user_id=user_id,
-            username=username,
-            commodity=commodity,
-            district=district,
-            market=market,
-            quantity=quantity,
-            remark=remark,
-            complaint_type=complaint_type
-        )
+        new_remark = Remark(user_id=user_id, username=username, commodity=commodity, district=district, market=market, quantity=quantity, remark=remark, complaint_type=complaint_type)
         db.session.add(new_remark)
         db.session.commit()
-        
-        # Log activity
-        activity_desc = f'Submitted {complaint_type} for {commodity}'
-        log_activity(user_id, username, complaint_type, activity_desc)
-        
-        return jsonify({
-            'success': True,
-            'message': f'{complaint_type.capitalize()} submitted successfully',
-            'remark': new_remark.to_dict()
-        }), 201
+        log_activity(user_id, username, complaint_type, f'Submitted {complaint_type} for {commodity}')
+        return jsonify({'success': True, 'message': f'{complaint_type.capitalize()} submitted successfully', 'remark': new_remark.to_dict()}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -1365,93 +1007,52 @@ def submit_remark():
 
 @app.route('/api/remarks/user', methods=['GET'])
 def get_user_remarks():
-    """Get remarks and complaints for the logged-in user"""
     user_id = request.args.get('user_id', type=int)
-    complaint_type = request.args.get('type')  # Optional filter: 'remark' or 'complaint'
-    
+    complaint_type = request.args.get('type')
     if not user_id:
         return jsonify({'success': False, 'message': 'User ID is required'}), 400
-    
     try:
         query = Remark.query.filter_by(user_id=user_id)
-        
         if complaint_type:
             query = query.filter_by(complaint_type=complaint_type)
-        
         remarks = query.order_by(Remark.created_at.desc()).all()
-        
-        return jsonify({
-            'success': True,
-            'remarks': [r.to_dict() for r in remarks],
-            'total': len(remarks)
-        }), 200
+        return jsonify({'success': True, 'remarks': [r.to_dict() for r in remarks], 'total': len(remarks)}), 200
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @app.route('/api/admin/complaints', methods=['GET'])
 def get_complaints():
-    """Get all complaints for admin dashboard"""
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     include_responded = request.args.get('include_responded', 'true').lower() == 'true'
-    
     try:
-        # Get only complaints (not regular remarks)
         query = Remark.query.filter_by(complaint_type='complaint')
-        
         if not include_responded:
-            # Only show complaints without admin response
             query = query.filter(Remark.admin_response == None)
-        
-        pagination = query.order_by(Remark.created_at.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
-        
-        return jsonify({
-            'success': True,
-            'complaints': [r.to_dict() for r in pagination.items],
-            'total': pagination.total,
-            'page': page,
-            'per_page': per_page,
-            'pages': pagination.pages
-        }), 200
+        pagination = query.order_by(Remark.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        return jsonify({'success': True, 'complaints': [r.to_dict() for r in pagination.items], 'total': pagination.total, 'page': page, 'per_page': per_page, 'pages': pagination.pages}), 200
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @app.route('/api/admin/respond-complaint', methods=['POST'])
 def respond_to_complaint():
-    """Admin responds to a user complaint"""
     data = request.get_json()
-    
     complaint_id = data.get('complaint_id')
-    # Accept both 'response' and 'admin_response' for compatibility
     admin_response = data.get('response') or data.get('admin_response')
-    
     if not complaint_id or not admin_response:
         return jsonify({'success': False, 'message': 'Complaint ID and response are required'}), 400
-    
     try:
         remark = Remark.query.get(complaint_id)
-        
         if not remark:
             return jsonify({'success': False, 'message': 'Complaint not found'}), 404
-        
         if remark.complaint_type != 'complaint':
             return jsonify({'success': False, 'message': 'This is not a complaint'}), 400
-        
-        # Update the complaint with admin response
         remark.admin_response = admin_response
         remark.response_date = datetime.utcnow()
-        
         db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Response sent successfully',
-            'remark': remark.to_dict()
-        }), 200
+        return jsonify({'success': True, 'message': 'Response sent successfully', 'remark': remark.to_dict()}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -1459,65 +1060,33 @@ def respond_to_complaint():
 
 @app.route('/api/user/complaints', methods=['GET'])
 def get_user_complaints():
-    """Get complaints with admin responses for the logged-in user"""
     user_id = request.args.get('user_id', type=int)
-    username = request.args.get('username', '')  # Add username as fallback
+    username = request.args.get('username', '')
     show_all = request.args.get('show_all', 'false').lower() == 'true'
-    
     if not user_id and not username:
         return jsonify({'success': False, 'message': 'User ID or username is required'}), 400
-
     try:
-        # First try to get complaints by user_id
         query = Remark.query.filter_by(complaint_type='complaint')
-        
-        # If user_id is provided and valid, filter by it
         if user_id:
             query = query.filter_by(user_id=user_id)
-        # If username is provided, filter by it as fallback
         elif username:
             query = query.filter_by(username=username)
-        
         complaints = query.order_by(Remark.created_at.desc()).all()
-        
-        # If no complaints found with user_id, try username as fallback
         if not complaints and user_id and username:
-            query = Remark.query.filter_by(
-                complaint_type='complaint',
-                username=username
-            )
-            complaints = query.order_by(Remark.created_at.desc()).all()
-        
-        return jsonify({
-            'success': True,
-            'complaints': [c.to_dict() for c in complaints],
-            'total': len(complaints)
-        }), 200
+            complaints = Remark.query.filter_by(complaint_type='complaint', username=username).order_by(Remark.created_at.desc()).all()
+        return jsonify({'success': True, 'complaints': [c.to_dict() for c in complaints], 'total': len(complaints)}), 200
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @app.route('/api/admin/remarks', methods=['GET'])
 def get_remarks():
-    """Get all remarks for admin dashboard"""
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
-    
     try:
         query = Remark.query
-        
-        pagination = query.order_by(Remark.created_at.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
-        
-        return jsonify({
-            'success': True,
-            'remarks': [r.to_dict() for r in pagination.items],
-            'total': pagination.total,
-            'page': page,
-            'per_page': per_page,
-            'pages': pagination.pages
-        }), 200
+        pagination = query.order_by(Remark.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        return jsonify({'success': True, 'remarks': [r.to_dict() for r in pagination.items], 'total': pagination.total, 'page': page, 'per_page': per_page, 'pages': pagination.pages}), 200
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -1528,44 +1097,31 @@ def get_remarks():
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
-    return jsonify({
-        'success': True,
-        'message': 'AgriPredict API is running',
-        'timestamp': datetime.utcnow().isoformat()
-    }), 200
+    return jsonify({'success': True, 'message': 'AgriPredict API is running', 'timestamp': datetime.utcnow().isoformat()}), 200
 
 
 # ============================================
-# Frontend Routes - Serve the web application
+# Frontend Routes
 # ============================================
 
 @app.route('/')
 def serve_index():
-    """Serve the main index.html file"""
     try:
         return app.send_static_file('index.html')
     except:
-        # If using template folder, render from templates
         from flask import render_template
         return render_template('index.html')
 
 @app.route('/<path:filename>')
 def serve_static(filename):
-    """Serve static files (CSS, JS, images) from frontend directory"""
     from flask import send_from_directory
     import os
-    
-    # Get the frontend directory path
     app_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(app_dir, '..'))
     frontend_dir = os.path.join(project_root, 'frontend')
-    
-    # Check if file exists in frontend directory
     file_path = os.path.join(frontend_dir, filename)
     if os.path.exists(file_path):
         return send_from_directory(frontend_dir, filename)
-    
     return jsonify({'success': False, 'message': 'File not found'}), 404
 
 
@@ -1573,15 +1129,12 @@ def serve_static(filename):
 # Main Entry Point
 # ============================================
 
-# Lazy database initialization flag
 _db_initialized = False
 
 def init_database_lazy():
-    """Lazy database initialization - only runs once when first needed"""
     global _db_initialized
     if _db_initialized:
         return True
-    
     try:
         init_database()
         _db_initialized = True
@@ -1590,10 +1143,8 @@ def init_database_lazy():
         print(f"Database initialization error (will use fallback): {e}")
         return False
 
-# Initialize database lazily on first request
 @app.before_request
 def before_request_init():
-    """Initialize database on first API request if not initialized"""
     global _db_initialized
     if not _db_initialized:
         try:
@@ -1603,7 +1154,4 @@ def before_request_init():
             print(f"Lazy init error: {e}")
 
 if __name__ == '__main__':
-    # Run the application WITHOUT initializing database at startup
-    # Database will be initialized lazily on first request
     app.run(host='0.0.0.0', port=5000, debug=True)
-
