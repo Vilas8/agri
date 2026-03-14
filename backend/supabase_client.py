@@ -10,7 +10,7 @@ Install: pip install supabase
 import os
 from supabase import create_client, Client
 
-SUPABASE_URL: str = os.environ.get("SUPABASE_URL", "")
+SUPABASE_URL: str              = os.environ.get("SUPABASE_URL", "")
 SUPABASE_SERVICE_ROLE_KEY: str = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 _supabase_client: Client | None = None
@@ -39,20 +39,26 @@ def get_supabase_admin() -> Client | None:
 def upsert_user_profile(user_id: str, username: str, phone: str, email: str) -> bool:
     """
     Upsert a user profile row in the `profiles` table.
-    This table stores app-specific data beyond what Supabase Auth keeps.
     Schema expected:
-      profiles(id uuid references auth.users, username text, phone text, email text, role text, created_at timestamptz)
+      profiles(
+        id        uuid references auth.users on delete cascade,
+        username  text,
+        phone     text,
+        email     text,
+        role      text default 'user',
+        created_at timestamptz default now()
+      )
     """
     client = get_supabase_admin()
     if not client:
         return False
     try:
         client.table("profiles").upsert({
-            "id": user_id,
+            "id":       user_id,
             "username": username,
-            "phone": phone,
-            "email": email,
-            "role": "user",
+            "phone":    phone,
+            "email":    email,
+            "role":     "user",
         }).execute()
         return True
     except Exception as e:
@@ -70,4 +76,22 @@ def get_user_profile(user_id: str) -> dict | None:
         return resp.data
     except Exception as e:
         print(f"[Supabase] get_user_profile error: {e}")
+        return None
+
+
+def verify_jwt(access_token: str) -> dict | None:
+    """
+    Verify a Supabase-issued JWT and return the decoded user payload.
+    Used in protected Flask endpoints to authenticate requests.
+    Returns None on failure.
+    """
+    client = get_supabase_admin()
+    if not client:
+        return None
+    try:
+        # supabase-py v2: auth.get_user() validates the JWT server-side
+        resp = client.auth.get_user(access_token)
+        return resp.user.__dict__ if resp.user else None
+    except Exception as e:
+        print(f"[Supabase] verify_jwt error: {e}")
         return None
