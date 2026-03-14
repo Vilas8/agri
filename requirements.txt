@@ -1,0 +1,22 @@
+# AgriPredict Backend Dependencies
+
+# Flask and extensions
+Flask>=2.3.0
+Flask-SQLAlchemy>=3.0.0
+Flask-CORS>=4.0.0
+
+# Database
+PyMySQL>=1.1.0
+cryptography>=41.0.0
+
+# ML for predictions
+scikit-learn>=1.3.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# JWT authentication
+PyJWT>=2.8.0
+
+# Excel file handling
+openpyxl>=3.1.0
+

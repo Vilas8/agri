@@ -1,0 +1,422 @@
+[
+  {
+    "Date":"2021-01-01",
+    "Maize (Rs\/Qtl)":1957.2,
+    "Paddy (Rs\/Qtl)":2190.97,
+    "Wheat (Rs\/Qtl)":2272.86,
+    "Sugarcane (Rs\/Qtl)":3027.39
+  },
+  {
+    "Date":"2021-02-01",
+    "Maize (Rs\/Qtl)":2002.69,
+    "Paddy (Rs\/Qtl)":2028.69,
+    "Wheat (Rs\/Qtl)":2461.8,
+    "Sugarcane (Rs\/Qtl)":3137.59
+  },
+  {
+    "Date":"2021-03-01",
+    "Maize (Rs\/Qtl)":1961.21,
+    "Paddy (Rs\/Qtl)":2138.93,
+    "Wheat (Rs\/Qtl)":2291.47,
+    "Sugarcane (Rs\/Qtl)":3133.54
+  },
+  {
+    "Date":"2021-04-01",
+    "Maize (Rs\/Qtl)":1977.04,
+    "Paddy (Rs\/Qtl)":2209.39,
+    "Wheat (Rs\/Qtl)":2280.31,
+    "Sugarcane (Rs\/Qtl)":3088.66
+  },
+  {
+    "Date":"2021-05-01",
+    "Maize (Rs\/Qtl)":1836.54,
+    "Paddy (Rs\/Qtl)":2170.54,
+    "Wheat (Rs\/Qtl)":2462.07,
+    "Sugarcane (Rs\/Qtl)":2887.97
+  },
+  {
+    "Date":"2021-06-01",
+    "Maize (Rs\/Qtl)":2013.17,
+    "Paddy (Rs\/Qtl)":2190.74,
+    "Wheat (Rs\/Qtl)":2347.76,
+    "Sugarcane (Rs\/Qtl)":3096.76
+  },
+  {
+    "Date":"2021-07-01",
+    "Maize (Rs\/Qtl)":1930.93,
+    "Paddy (Rs\/Qtl)":1990.56,
+    "Wheat (Rs\/Qtl)":2408.71,
+    "Sugarcane (Rs\/Qtl)":2910.62
+  },
+  {
+    "Date":"2021-08-01",
+    "Maize (Rs\/Qtl)":1839.69,
+    "Paddy (Rs\/Qtl)":2170.12,
+    "Wheat (Rs\/Qtl)":2527.23,
+    "Sugarcane (Rs\/Qtl)":2823.13
+  },
+  {
+    "Date":"2021-09-01",
+    "Maize (Rs\/Qtl)":1933.05,
+    "Paddy (Rs\/Qtl)":2076.44,
+    "Wheat (Rs\/Qtl)":2397.76,
+    "Sugarcane (Rs\/Qtl)":2967.79
+  },
+  {
+    "Date":"2021-10-01",
+    "Maize (Rs\/Qtl)":1808.06,
+    "Paddy (Rs\/Qtl)":2088.13,
+    "Wheat (Rs\/Qtl)":2397.9,
+    "Sugarcane (Rs\/Qtl)":2937.62
+  },
+  {
+    "Date":"2021-11-01",
+    "Maize (Rs\/Qtl)":1949.81,
+    "Paddy (Rs\/Qtl)":2221.79,
+    "Wheat (Rs\/Qtl)":2501.16,
+    "Sugarcane (Rs\/Qtl)":2920.21
+  },
+  {
+    "Date":"2021-12-01",
+    "Maize (Rs\/Qtl)":1797.52,
+    "Paddy (Rs\/Qtl)":2096.34,
+    "Wheat (Rs\/Qtl)":2352.75,
+    "Sugarcane (Rs\/Qtl)":2924.31
+  },
+  {
+    "Date":"2022-01-01",
+    "Maize (Rs\/Qtl)":1876.46,
+    "Paddy (Rs\/Qtl)":2177.56,
+    "Wheat (Rs\/Qtl)":2568.48,
+    "Sugarcane (Rs\/Qtl)":3266.7
+  },
+  {
+    "Date":"2022-02-01",
+    "Maize (Rs\/Qtl)":2014.91,
+    "Paddy (Rs\/Qtl)":2122.65,
+    "Wheat (Rs\/Qtl)":2546.25,
+    "Sugarcane (Rs\/Qtl)":2971.23
+  },
+  {
+    "Date":"2022-03-01",
+    "Maize (Rs\/Qtl)":1877.38,
+    "Paddy (Rs\/Qtl)":2166.16,
+    "Wheat (Rs\/Qtl)":2519.64,
+    "Sugarcane (Rs\/Qtl)":3156.55
+  },
+  {
+    "Date":"2022-04-01",
+    "Maize (Rs\/Qtl)":1909.02,
+    "Paddy (Rs\/Qtl)":2217.3,
+    "Wheat (Rs\/Qtl)":2428.76,
+    "Sugarcane (Rs\/Qtl)":3149.45
+  },
+  {
+    "Date":"2022-05-01",
+    "Maize (Rs\/Qtl)":1905.77,
+    "Paddy (Rs\/Qtl)":2304.3,
+    "Wheat (Rs\/Qtl)":2553.59,
+    "Sugarcane (Rs\/Qtl)":3097.38
+  },
+  {
+    "Date":"2022-06-01",
+    "Maize (Rs\/Qtl)":2053.56,
+    "Paddy (Rs\/Qtl)":2160.86,
+    "Wheat (Rs\/Qtl)":2608.21,
+    "Sugarcane (Rs\/Qtl)":3056.98
+  },
+  {
+    "Date":"2022-07-01",
+    "Maize (Rs\/Qtl)":2089.6,
+    "Paddy (Rs\/Qtl)":2142.61,
+    "Wheat (Rs\/Qtl)":2431.86,
+    "Sugarcane (Rs\/Qtl)":3089.27
+  },
+  {
+    "Date":"2022-08-01",
+    "Maize (Rs\/Qtl)":2030.38,
+    "Paddy (Rs\/Qtl)":2196.47,
+    "Wheat (Rs\/Qtl)":2415.05,
+    "Sugarcane (Rs\/Qtl)":3090.05
+  },
+  {
+    "Date":"2022-09-01",
+    "Maize (Rs\/Qtl)":1906.25,
+    "Paddy (Rs\/Qtl)":2120.48,
+    "Wheat (Rs\/Qtl)":2579.65,
+    "Sugarcane (Rs\/Qtl)":3197.35
+  },
+  {
+    "Date":"2022-10-01",
+    "Maize (Rs\/Qtl)":1992.26,
+    "Paddy (Rs\/Qtl)":2294.7,
+    "Wheat (Rs\/Qtl)":2393.17,
+    "Sugarcane (Rs\/Qtl)":2987.1
+  },
+  {
+    "Date":"2022-11-01",
+    "Maize (Rs\/Qtl)":1866.34,
+    "Paddy (Rs\/Qtl)":2146.99,
+    "Wheat (Rs\/Qtl)":2439.41,
+    "Sugarcane (Rs\/Qtl)":2990.85
+  },
+  {
+    "Date":"2022-12-01",
+    "Maize (Rs\/Qtl)":2080.24,
+    "Paddy (Rs\/Qtl)":2255.22,
+    "Wheat (Rs\/Qtl)":2439.58,
+    "Sugarcane (Rs\/Qtl)":3237.68
+  },
+  {
+    "Date":"2023-01-01",
+    "Maize (Rs\/Qtl)":2120.28,
+    "Paddy (Rs\/Qtl)":2240.81,
+    "Wheat (Rs\/Qtl)":2614.64,
+    "Sugarcane (Rs\/Qtl)":3242.74
+  },
+  {
+    "Date":"2023-02-01",
+    "Maize (Rs\/Qtl)":2136.36,
+    "Paddy (Rs\/Qtl)":2235.67,
+    "Wheat (Rs\/Qtl)":2679.14,
+    "Sugarcane (Rs\/Qtl)":3255.61
+  },
+  {
+    "Date":"2023-03-01",
+    "Maize (Rs\/Qtl)":2044.77,
+    "Paddy (Rs\/Qtl)":2178.75,
+    "Wheat (Rs\/Qtl)":2645.53,
+    "Sugarcane (Rs\/Qtl)":3301.19
+  },
+  {
+    "Date":"2023-04-01",
+    "Maize (Rs\/Qtl)":2093.89,
+    "Paddy (Rs\/Qtl)":2206.01,
+    "Wheat (Rs\/Qtl)":2671.6,
+    "Sugarcane (Rs\/Qtl)":3411.08
+  },
+  {
+    "Date":"2023-05-01",
+    "Maize (Rs\/Qtl)":2099.68,
+    "Paddy (Rs\/Qtl)":2266.61,
+    "Wheat (Rs\/Qtl)":2688.13,
+    "Sugarcane (Rs\/Qtl)":3318.03
+  },
+  {
+    "Date":"2023-06-01",
+    "Maize (Rs\/Qtl)":2133.09,
+    "Paddy (Rs\/Qtl)":2339.06,
+    "Wheat (Rs\/Qtl)":2573.72,
+    "Sugarcane (Rs\/Qtl)":3233.92
+  },
+  {
+    "Date":"2023-07-01",
+    "Maize (Rs\/Qtl)":2075.77,
+    "Paddy (Rs\/Qtl)":2205.88,
+    "Wheat (Rs\/Qtl)":2506.8,
+    "Sugarcane (Rs\/Qtl)":3248.16
+  },
+  {
+    "Date":"2023-08-01",
+    "Maize (Rs\/Qtl)":2000.93,
+    "Paddy (Rs\/Qtl)":2326.83,
+    "Wheat (Rs\/Qtl)":2537.51,
+    "Sugarcane (Rs\/Qtl)":3367.14
+  },
+  {
+    "Date":"2023-09-01",
+    "Maize (Rs\/Qtl)":1936.8,
+    "Paddy (Rs\/Qtl)":2286.83,
+    "Wheat (Rs\/Qtl)":2494.59,
+    "Sugarcane (Rs\/Qtl)":3160.48
+  },
+  {
+    "Date":"2023-10-01",
+    "Maize (Rs\/Qtl)":1973.12,
+    "Paddy (Rs\/Qtl)":2230.66,
+    "Wheat (Rs\/Qtl)":2467.08,
+    "Sugarcane (Rs\/Qtl)":3292.01
+  },
+  {
+    "Date":"2023-11-01",
+    "Maize (Rs\/Qtl)":1937.49,
+    "Paddy (Rs\/Qtl)":2355.17,
+    "Wheat (Rs\/Qtl)":2638.82,
+    "Sugarcane (Rs\/Qtl)":3274.14
+  },
+  {
+    "Date":"2023-12-01",
+    "Maize (Rs\/Qtl)":2122.7,
+    "Paddy (Rs\/Qtl)":2151.81,
+    "Wheat (Rs\/Qtl)":2730.36,
+    "Sugarcane (Rs\/Qtl)":3164.73
+  },
+  {
+    "Date":"2024-01-01",
+    "Maize (Rs\/Qtl)":2046.69,
+    "Paddy (Rs\/Qtl)":2249.35,
+    "Wheat (Rs\/Qtl)":2720.39,
+    "Sugarcane (Rs\/Qtl)":3336.3
+  },
+  {
+    "Date":"2024-02-01",
+    "Maize (Rs\/Qtl)":2196.89,
+    "Paddy (Rs\/Qtl)":2334.82,
+    "Wheat (Rs\/Qtl)":2594.35,
+    "Sugarcane (Rs\/Qtl)":3504.58
+  },
+  {
+    "Date":"2024-03-01",
+    "Maize (Rs\/Qtl)":2159.12,
+    "Paddy (Rs\/Qtl)":2462.87,
+    "Wheat (Rs\/Qtl)":2528.9,
+    "Sugarcane (Rs\/Qtl)":3356.04
+  },
+  {
+    "Date":"2024-04-01",
+    "Maize (Rs\/Qtl)":2086.67,
+    "Paddy (Rs\/Qtl)":2282.11,
+    "Wheat (Rs\/Qtl)":2667.72,
+    "Sugarcane (Rs\/Qtl)":3228.68
+  },
+  {
+    "Date":"2024-05-01",
+    "Maize (Rs\/Qtl)":2236.16,
+    "Paddy (Rs\/Qtl)":2486.83,
+    "Wheat (Rs\/Qtl)":2806.15,
+    "Sugarcane (Rs\/Qtl)":3500.74
+  },
+  {
+    "Date":"2024-06-01",
+    "Maize (Rs\/Qtl)":2039.12,
+    "Paddy (Rs\/Qtl)":2446.78,
+    "Wheat (Rs\/Qtl)":2792.76,
+    "Sugarcane (Rs\/Qtl)":3403.49
+  },
+  {
+    "Date":"2024-07-01",
+    "Maize (Rs\/Qtl)":2001.29,
+    "Paddy (Rs\/Qtl)":2306.17,
+    "Wheat (Rs\/Qtl)":2845.29,
+    "Sugarcane (Rs\/Qtl)":3408.19
+  },
+  {
+    "Date":"2024-08-01",
+    "Maize (Rs\/Qtl)":2091.29,
+    "Paddy (Rs\/Qtl)":2273.58,
+    "Wheat (Rs\/Qtl)":2779.84,
+    "Sugarcane (Rs\/Qtl)":3543.48
+  },
+  {
+    "Date":"2024-09-01",
+    "Maize (Rs\/Qtl)":2231.32,
+    "Paddy (Rs\/Qtl)":2310.52,
+    "Wheat (Rs\/Qtl)":2539.59,
+    "Sugarcane (Rs\/Qtl)":3382.31
+  },
+  {
+    "Date":"2024-10-01",
+    "Maize (Rs\/Qtl)":2249.19,
+    "Paddy (Rs\/Qtl)":2213.54,
+    "Wheat (Rs\/Qtl)":2700.77,
+    "Sugarcane (Rs\/Qtl)":3231.06
+  },
+  {
+    "Date":"2024-11-01",
+    "Maize (Rs\/Qtl)":2247.22,
+    "Paddy (Rs\/Qtl)":2466.08,
+    "Wheat (Rs\/Qtl)":2622.93,
+    "Sugarcane (Rs\/Qtl)":3421.98
+  },
+  {
+    "Date":"2024-12-01",
+    "Maize (Rs\/Qtl)":2035.75,
+    "Paddy (Rs\/Qtl)":2221.61,
+    "Wheat (Rs\/Qtl)":2559.56,
+    "Sugarcane (Rs\/Qtl)":3514.77
+  },
+  {
+    "Date":"2025-01-01",
+    "Maize (Rs\/Qtl)":2243.49,
+    "Paddy (Rs\/Qtl)":2572.19,
+    "Wheat (Rs\/Qtl)":2932.93,
+    "Sugarcane (Rs\/Qtl)":3367.92
+  },
+  {
+    "Date":"2025-02-01",
+    "Maize (Rs\/Qtl)":2293.7,
+    "Paddy (Rs\/Qtl)":2349.45,
+    "Wheat (Rs\/Qtl)":2681.27,
+    "Sugarcane (Rs\/Qtl)":3494.22
+  },
+  {
+    "Date":"2025-03-01",
+    "Maize (Rs\/Qtl)":2234.48,
+    "Paddy (Rs\/Qtl)":2304.83,
+    "Wheat (Rs\/Qtl)":2928.06,
+    "Sugarcane (Rs\/Qtl)":3286.86
+  },
+  {
+    "Date":"2025-04-01",
+    "Maize (Rs\/Qtl)":2319.0,
+    "Paddy (Rs\/Qtl)":2393.25,
+    "Wheat (Rs\/Qtl)":2875.18,
+    "Sugarcane (Rs\/Qtl)":3331.23
+  },
+  {
+    "Date":"2025-05-01",
+    "Maize (Rs\/Qtl)":2211.14,
+    "Paddy (Rs\/Qtl)":2309.83,
+    "Wheat (Rs\/Qtl)":2702.38,
+    "Sugarcane (Rs\/Qtl)":3319.9
+  },
+  {
+    "Date":"2025-06-01",
+    "Maize (Rs\/Qtl)":2301.32,
+    "Paddy (Rs\/Qtl)":2378.3,
+    "Wheat (Rs\/Qtl)":2761.72,
+    "Sugarcane (Rs\/Qtl)":3425.04
+  },
+  {
+    "Date":"2025-07-01",
+    "Maize (Rs\/Qtl)":2175.06,
+    "Paddy (Rs\/Qtl)":2313.62,
+    "Wheat (Rs\/Qtl)":2767.66,
+    "Sugarcane (Rs\/Qtl)":3603.45
+  },
+  {
+    "Date":"2025-08-01",
+    "Maize (Rs\/Qtl)":2202.22,
+    "Paddy (Rs\/Qtl)":2520.71,
+    "Wheat (Rs\/Qtl)":2874.39,
+    "Sugarcane (Rs\/Qtl)":3595.43
+  },
+  {
+    "Date":"2025-09-01",
+    "Maize (Rs\/Qtl)":2199.58,
+    "Paddy (Rs\/Qtl)":2366.71,
+    "Wheat (Rs\/Qtl)":2759.33,
+    "Sugarcane (Rs\/Qtl)":3439.59
+  },
+  {
+    "Date":"2025-10-01",
+    "Maize (Rs\/Qtl)":2227.89,
+    "Paddy (Rs\/Qtl)":2550.6,
+    "Wheat (Rs\/Qtl)":2769.0,
+    "Sugarcane (Rs\/Qtl)":3474.19
+  },
+  {
+    "Date":"2025-11-01",
+    "Maize (Rs\/Qtl)":2202.21,
+    "Paddy (Rs\/Qtl)":2444.48,
+    "Wheat (Rs\/Qtl)":2651.3,
+    "Sugarcane (Rs\/Qtl)":3667.48
+  },
+  {
+    "Date":"2025-12-01",
+    "Maize (Rs\/Qtl)":2271.37,
+    "Paddy (Rs\/Qtl)":2450.68,
+    "Wheat (Rs\/Qtl)":2680.94,
+    "Sugarcane (Rs\/Qtl)":3491.51
+  }
+]
